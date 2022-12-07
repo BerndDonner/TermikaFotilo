@@ -1,0 +1,27 @@
+Laufzeit der ursprünglichen Version:
+
+PROFILING --- Laufzeit der Hauptschleife: 1635676
+PROFILING --- Laufzeit der Hauptschleife: 1636208
+PROFILING --- Laufzeit der Hauptschleife: 1635340
+PROFILING --- Laufzeit der Hauptschleife: 1636032
+PROFILING --- Laufzeit der Hauptschleife: 1635836
+PROFILING --- Laufzeit der Hauptschleife: 1634928
+PROFILING --- Laufzeit der Hauptschleife: 1635620
+PROFILING --- Laufzeit der Hauptschleife: 1635708
+PROFILING --- Laufzeit der Hauptschleife: 1635764
+PROFILING --- Laufzeit der Hauptschleife: 1634700
+
+ohne TFTscreen.fill
+
+PROFILING --- Laufzeit der Hauptschleife: 1514156
+PROFILING --- Laufzeit der Hauptschleife: 1513732
+PROFILING --- Laufzeit der Hauptschleife: 1513324
+PROFILING --- Laufzeit der Hauptschleife: 1514168
+PROFILING --- Laufzeit der Hauptschleife: 1513540
+PROFILING --- Laufzeit der Hauptschleife: 1514096
+PROFILING --- Laufzeit der Hauptschleife: 1513608
+PROFILING --- Laufzeit der Hauptschleife: 1514100
+PROFILING --- Laufzeit der Hauptschleife: 1513996
+PROFILING --- Laufzeit der Hauptschleife: 1514268
+PROFILING --- Laufzeit der Hauptschleife: 1514264
+PROFILING --- Laufzeit der Hauptschleife: 1513816

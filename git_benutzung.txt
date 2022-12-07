@@ -1,0 +1,8 @@
+Neues remote repository auf Bernd Donners reporitory setzen:
+git remote set-url origin https://github.com/BerndDonner/TermikaFotilo
+
+Bernd: local heißt mein Hauptbranch master. Hauptbranch remote: main
+git push -u origin master:main
+
+git add termika_fotilo.ino
+git commit -m "TFT Farbwerte über Macro einstellbar gemacht"
