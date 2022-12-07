@@ -25,3 +25,20 @@ PROFILING --- Laufzeit der Hauptschleife: 1513996
 PROFILING --- Laufzeit der Hauptschleife: 1514268
 PROFILING --- Laufzeit der Hauptschleife: 1514264
 PROFILING --- Laufzeit der Hauptschleife: 1513816
+
+Interpolation mit Tabellen
+
+PROFILING --- Laufzeit der Hauptschleife: 1068128
+PROFILING --- Laufzeit der Hauptschleife: 1067996
+PROFILING --- Laufzeit der Hauptschleife: 1068096
+PROFILING --- Laufzeit der Hauptschleife: 1068048
+PROFILING --- Laufzeit der Hauptschleife: 1068140
+PROFILING --- Laufzeit der Hauptschleife: 1068152
+PROFILING --- Laufzeit der Hauptschleife: 1068152
+PROFILING --- Laufzeit der Hauptschleife: 1068056
+PROFILING --- Laufzeit der Hauptschleife: 1067968
+PROFILING --- Laufzeit der Hauptschleife: 1067980
+PROFILING --- Laufzeit der Hauptschleife: 1067964
+PROFILING --- Laufzeit der Hauptschleife: 1067984
+PROFILING --- Laufzeit der Hauptschleife: 1067944
+

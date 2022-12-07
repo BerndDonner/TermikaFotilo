@@ -22,7 +22,10 @@
 #include "termika_fotilo.h"
 #include "mlx90621.h"
 
+
+#define PROFILING
 #define RGB(r, g, b)   r, g, b
+
 
 TFT TFTscreen = TFT(CS_, DC_, RST_);    // TFT Konstruktor
 MLX90621 MLXtemp;                       // Objekt fuer Tempsensor erzeugen
@@ -31,16 +34,28 @@ void setup() {}     // Arduino Schwachsinn
 
 void loop() 
 {
-//  Serial.begin(9600);
+  #ifdef PROFILING
+    unsigned long time_start, time_stop;
+    Serial.begin(9600);
+  #endif
   StartScreen();
   while (!MLXtemp.init())        // MLX90620 init failed
     delay (100);
   
   while (1)   // endlos
   {
+    #ifdef PROFILING
+      time_start = micros();
+    #endif
     OutAmbientTemp();
     OutTempField();
     delay(100);         // etwas weniger Stress
+    #ifdef PROFILING
+      time_stop = micros();
+      Serial.print("PROFILING --- Laufzeit der Hauptschleife: ");
+      Serial.println(time_stop-time_start); //prints time since program started
+    #endif
+
   }
 }
 
@@ -193,6 +208,7 @@ void OutTempField(void)
       temps[x][y] = i;
     }
   }
+  
 
   // Ausgabe des Temperaturfeldes auf Display
   for (y = 0; y < 4; y++)
@@ -214,39 +230,28 @@ void OutTempField(void)
   }
 //    Serial.println("***");
 
-  // Ausgabe interpolierte Werte (Problemloesung durch viel Rechnezeit, da wenig Speicher)
-  for(x = 0; x < (ZOOM * 15); x++)
+  // Interpolation mit Tabelle
+  for(int yi = 0; yi <  4-1; ++yi)
   {
-    for(y = 0; y < (ZOOM * 3); y++)
+    for(int xi = 0; xi < 16-1; ++xi)
     {
-      xmod = x % ZOOM;
-      xorg1 = x - xmod;
-      xorg2 = xorg1 + ZOOM;
-      ymod = y % ZOOM;
-      yorg1 = y - ymod;
-      yorg2 = yorg1 + ZOOM;
-      i1 = LinInterpol (temps[x / ZOOM][y / ZOOM], temps[x / ZOOM + 1][y / ZOOM], xorg1 , xorg2, x);                  // horizontale Interpolation Ausgangsdaten Zeile n
-      i2 = LinInterpol (temps[x / ZOOM][y / ZOOM + 1], temps[x / ZOOM + 1][y / ZOOM + 1], xorg1 , xorg2, x);          // horizontale Interpolation Ausgangsdaten Zeile n+1
-      interpoltemp = LinInterpol (i1, i2, yorg1, yorg2, y);                                                           // vertikale Interpolation
+      for(int yd = 0; yd <  ZOOM; ++yd)
+      {
+        for(int xd = 0; xd < ZOOM; ++xd)
+        {
+          interpoltemp = temps[xi  ][yi  ] * Weight[xd     ][yd     ] +
+                         temps[xi+1][yi  ] * Weight[ZOOM-xd][yd     ] +
+                         temps[xi  ][yi+1] * Weight[xd     ][ZOOM-yd] +
+                         temps[xi+1][yi+1] * Weight[ZOOM-xd][ZOOM-yd];
 
-      hue = HUEMAX - (interpoltemp + abs(MINTEMP)) * (HUEMAX / (float)(MAXTEMP + abs(MINTEMP)));
-      HSVtoRGB (R, G, B, hue, 1, .5);        
-      TFTscreen.stroke (RGB(R * 255, G * 255, B * 255));  
-      TFTscreen.fill (RGB(R * 255, G * 255, B * 255));     //BD: <--- is that used at all???
-      TFTscreen.point (x + 1, y + 75 + 1);                    // interpol. Pixel
+          hue = HUEMAX - (interpoltemp + abs(MINTEMP)) * (HUEMAX / (float)(MAXTEMP + abs(MINTEMP)));
+          HSVtoRGB (R, G, B, hue, 1, .5);        
+          TFTscreen.stroke (RGB(R * 255, G * 255, B * 255));  
+          TFTscreen.point (xi*ZOOM+xd + 1, yi*ZOOM+yd + 75 + 1);                    // interpol. Pixel
+        }
+      }
     }
   }
-}
-
-/**
-  @brief  Fuehrt lineare Interpolation durch
-  @param  x1 <= x <= x2
-          t1, t2 Temperatur
-  @return interpolierte Temperatur fuer x
-*/
-float LinInterpol (float t1, float t2, uint8_t x1, uint8_t x2, uint8_t x)
-{
-  return t1 * (x2 - x) / ZOOM + t2 * (x - x1) / ZOOM;
 }
 
 /**
