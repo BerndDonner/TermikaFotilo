@@ -38,6 +38,7 @@ void loop()
     unsigned long time_start, time_stop;
     Serial.begin(9600);
   #endif
+  initWeight();  
   StartScreen();
   while (!MLXtemp.init())        // MLX90620 init failed
     delay (100);
@@ -56,6 +57,17 @@ void loop()
       Serial.println(time_stop-time_start); //prints time since program started
     #endif
 
+  }
+}
+
+void initWeight()
+{
+  for (int i = 0; i <= ZOOM; ++i)
+  {
+    for (int j = 0; j <= ZOOM; ++j)
+    {
+      Weight[i][j] = (ZOOM-i)*(ZOOM-j) / (float) (ZOOM*ZOOM);
+    }
   }
 }
 
