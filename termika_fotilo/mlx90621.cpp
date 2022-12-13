@@ -11,7 +11,13 @@
  * BUFFER_LENGTH und
  * TWI_BUFFER_LENGTH
  * auf den Wert 64 geandert werden. Ansonsten ist der Buffer zum empfangen von I2C-Daten zu klein
+ * BD: TODO: Inconsistent ERROR Codes!!!
  */
+
+
+#include <Arduino.h>
+#include <avr/io.h>
+#include "i2cmaster.h"
 
 #include "mlx90621.h"
 
@@ -22,7 +28,8 @@
 */
 MLX90621::MLX90621(void)
 {
-  Wire.begin();     // join i2c bus 
+///  Wire.begin();     // join i2c bus
+  i2c_init(); 
 }
 
 /**
@@ -147,15 +154,26 @@ uint8_t MLX90621::read_eeprom_64 (uint8_t start)
 {
   uint16_t i;
 
-  Wire.beginTransmission(eeprom_dump_address);      // Adresse des Chips: Whole EEPROM dump
-  Wire.write (start);                                // Command: Read the whole EEPROM (start address)
-  Wire.endTransmission(0);
+  i2c_start_wait(eeprom_dump_address+I2C_WRITE); 
+  i2c_write(start);                         
+  if (i2c_rep_start(eeprom_dump_address+I2C_READ))
+    return 0;
+
+  for (i = start; i < (start + 64 - 1); i++)
+    eepromMLX[i] = i2c_readAck();
+
+  eepromMLX[i] = i2c_readNak();
+  i2c_stop();
+
+///  Wire.beginTransmission(eeprom_dump_address);      // Adresse des Chips: Whole EEPROM dump
+///  Wire.write (start);                                // Command: Read the whole EEPROM (start address)
+///  Wire.endTransmission(0);
   
-  if (!Wire.requestFrom(eeprom_dump_address, (uint8_t) 64) ) 
-    return 0;      // receive 64 Bytes. Wire.h kann eigentlich nur 32
+///  if (!Wire.requestFrom(eeprom_dump_address, (uint8_t) 64) ) 
+///    return 0;      // receive 64 Bytes. Wire.h kann eigentlich nur 32
     
-  for (i = start; i < (start + 64); i++)
-    eepromMLX[i] = Wire.read();
+///  for (i = start; i < (start + 64); i++)
+///    eepromMLX[i] = Wire.read();
 
   return 1;
 }
@@ -188,13 +206,21 @@ uint8_t MLX90621::read_eeprom (void)
 */
 void MLX90621::write_trim (uint8_t trimvalue)
 {
-  Wire.beginTransmission(chip_address);       // Adresse des Chips zum speichern des Trimwertes
-  Wire.write (0x04);                          // Command: write trim value
-  Wire.write (trimvalue - 0xAA);              // LSByte check
-  Wire.write (trimvalue);                     // LSB
-  Wire.write (0x00 - 0xAA);                   // HSByte check
-  Wire.write (0x00);                          // HSB/MSB
-  Wire.endTransmission();
+  i2c_start_wait(chip_address+I2C_WRITE);
+  i2c_write(0x04);                       
+  i2c_write(trimvalue - 0xAA);                       
+  i2c_write(trimvalue);                       
+  i2c_write((uint8_t) (0x00 - 0xAA));                       
+  i2c_write(0x00);                       
+  i2c_stop();                            
+
+///  Wire.beginTransmission(chip_address);       // Adresse des Chips zum speichern des Trimwertes
+///  Wire.write (0x04);                          // Command: write trim value
+///  Wire.write (trimvalue - 0xAA);              // LSByte check
+///  Wire.write (trimvalue);                     // LSB
+///  Wire.write (0x00 - 0xAA);                   // HSByte check
+///  Wire.write (0x00);                          // HSB/MSB
+///  Wire.endTransmission();
 }
 
 /**
@@ -204,13 +230,21 @@ void MLX90621::write_trim (uint8_t trimvalue)
 */
 void MLX90621::write_config (uint8_t lsb, uint8_t hsb)
 {
-  Wire.beginTransmission(chip_address);       // Adresse des Chips zum speichern der Konfigwerte
-  Wire.write (0x03);                          // Command: write config values
-  Wire.write (lsb - 0x55);                    // LSByte check
-  Wire.write (lsb);                           // LSB
-  Wire.write (hsb - 0x55);                    // HSByte check
-  Wire.write (hsb);                           // HSB/MSB
-  Wire.endTransmission();
+  i2c_start_wait(chip_address+I2C_WRITE);
+  i2c_write(0x03);                       
+  i2c_write(lsb - 0x55);                       
+  i2c_write(lsb);                       
+  i2c_write(hsb - 0x55);                       
+  i2c_write(hsb);                       
+  i2c_stop();                            
+
+///  Wire.beginTransmission(chip_address);       // Adresse des Chips zum speichern der Konfigwerte
+///  Wire.write (0x03);                          // Command: write config values
+///  Wire.write (lsb - 0x55);                    // LSByte check
+///  Wire.write (lsb);                           // LSB
+///  Wire.write (hsb - 0x55);                    // HSByte check
+///  Wire.write (hsb);                           // HSB/MSB
+///  Wire.endTransmission();
 }
 
 /**
@@ -222,17 +256,30 @@ int32_t MLX90621::read_config (void)
 {
   uint16_t configreg;
   
-  Wire.beginTransmission(chip_address);       // Adresse des Chips
-  Wire.write (0x02);                          // command
-  Wire.write (0x92);                          // start address
-  Wire.write (0x00);                          // Address step
-  Wire.write (0x01);                          // Number of reads
-  Wire.endTransmission(0);
- 
-  if (!Wire.requestFrom(chip_address, (uint8_t) 2))      // receive 2 Bytes
+  i2c_start_wait(chip_address+I2C_WRITE);
+  i2c_write(0x02);                       
+  i2c_write(0x92);                       
+  i2c_write(0x00);                       
+  i2c_write(0x01);
+
+  if (i2c_rep_start(chip_address+I2C_READ))
     return -1;
-  configreg = Wire.read();                  // LSB
-  configreg |= (Wire.read() << 8);          // OR HSB
+
+  configreg = i2c_readAck();
+  configreg |= (i2c_readNak() << 8);
+  i2c_stop();
+
+///  Wire.beginTransmission(chip_address);       // Adresse des Chips
+///  Wire.write (0x02);                          // command
+///  Wire.write (0x92);                          // start address
+///  Wire.write (0x00);                          // Address step
+///  Wire.write (0x01);                          // Number of reads
+///  Wire.endTransmission(0);
+ 
+///  if (!Wire.requestFrom(chip_address, (uint8_t) 2))      // receive 2 Bytes
+///    return -1;
+///  configreg = Wire.read();                  // LSB
+///  configreg |= (Wire.read() << 8);          // OR HSB
 
   return configreg;
 }
@@ -257,17 +304,30 @@ int32_t MLX90621::read_ptat (void)
 {
   int32_t ptat = 0;
   
-  Wire.beginTransmission(chip_address);       // Adresse des Chips
-  Wire.write (0x02);                          // command
-  Wire.write (0x40);                          // start address
-  Wire.write (0x00);                          // Address step
-  Wire.write (0x01);                          // Number of reads
-  Wire.endTransmission(0);
- 
-  if (!Wire.requestFrom(chip_address, (uint8_t) 2))      // receive 2 Bytes
+  i2c_start_wait(chip_address+I2C_WRITE);
+  i2c_write(0x02);                       
+  i2c_write(0x40);                       
+  i2c_write(0x00);                       
+  i2c_write(0x01);
+
+  if (i2c_rep_start(chip_address+I2C_READ))
     return -1;
-  ptat = Wire.read();                 // LSB
-  ptat |= Wire.read() << 8;          // OR HSB
+
+  ptat = i2c_readAck();
+  ptat |= (i2c_readNak() << 8);
+  i2c_stop();
+
+///  Wire.beginTransmission(chip_address);       // Adresse des Chips
+///  Wire.write (0x02);                          // command
+///  Wire.write (0x40);                          // start address
+///  Wire.write (0x00);                          // Address step
+///  Wire.write (0x01);                          // Number of reads
+///  Wire.endTransmission(0);
+ 
+///  if (!Wire.requestFrom(chip_address, (uint8_t) 2))      // receive 2 Bytes
+///    return -1;
+///  ptat = Wire.read();                 // LSB
+///  ptat |= Wire.read() << 8;          // OR HSB
 
   return ptat;
 }
@@ -325,18 +385,33 @@ int16_t MLX90621::read_compensation (void)
 {
   int8_t cp = 0;
   
-  Wire.beginTransmission(chip_address);       // Adresse des Chips
-  Wire.write (0x02);                          // command
-  Wire.write (0x41);                          // start address
-  Wire.write (0x00);                          // Address step
-  Wire.write (0x01);                          // Number of reads
-  Wire.endTransmission(0);
- 
-  if (!Wire.requestFrom(chip_address, (uint8_t) 2))      // receive 2 Bytes
-    return -1;
-  cp = Wire.read();                 // LSB
+  i2c_start_wait(chip_address+I2C_WRITE);
+  i2c_write(0x02);                       
+  i2c_write(0x41);                       
+  i2c_write(0x00);                       
+  i2c_write(0x01);
 
-  return ( (int16_t) Wire.read() << 8 | cp);
+  if (i2c_rep_start(chip_address+I2C_READ))
+    return -1;
+
+  cp = i2c_readAck();
+  cp |= (i2c_readNak() << 8);
+  i2c_stop();
+
+  return cp;
+
+///  Wire.beginTransmission(chip_address);       // Adresse des Chips
+///  Wire.write (0x02);                          // command
+///  Wire.write (0x41);                          // start address
+///  Wire.write (0x00);                          // Address step
+///  Wire.write (0x01);                          // Number of reads
+///  Wire.endTransmission(0);
+ 
+///  if (!Wire.requestFrom(chip_address, (uint8_t) 2))      // receive 2 Bytes
+///    return -1;
+///  cp = Wire.read();                 // LSB
+
+///  return ( (int16_t) Wire.read() << 8 | cp);
 }
 
 /**
@@ -348,63 +423,126 @@ uint8_t MLX90621::read_ir (void)
 {
   uint8_t i;
   
-  Wire.beginTransmission(chip_address);       // Adresse des Chips
-  Wire.write (0x02);                          // command: read 1 line
-  Wire.write (0x00);                          // start address
-  Wire.write (0x04);                          // Address step
-  Wire.write (0x10);                          // Number of reads    // nur erste 32 Bytes statt 128
-  Wire.endTransmission(0);
- 
-  if (!Wire.requestFrom(chip_address, (uint8_t) 32))      // receive 32 Bytes
-    return 0;
+  // Line 1
 
-  for (i=0; i < 32; i++)
-    irpixels[i] = Wire.read(); 
+  i2c_start_wait(chip_address+I2C_WRITE);
+  i2c_write(0x02);                       
+  i2c_write(0x00);                       
+  i2c_write(0x04);                       
+  i2c_write(0x10);
+
+  if (i2c_rep_start(chip_address+I2C_READ))
+    return 0;
+  
+  for (i=0; i < 32-1; i++)
+    irpixels[i] = i2c_readAck();
+  irpixels[i] = i2c_readNak();
+  i2c_stop();
 
   // Line 2
-  Wire.beginTransmission(chip_address);       // Adresse des Chips
-  Wire.write (0x02);                          // command: read 1 line
-  Wire.write (0x01);                          // start address
-  Wire.write (0x04);                          // Address step
-  Wire.write (0x10);                          // Number of reads    // nur erste 32 Bytes statt 128
-  Wire.endTransmission(0);
- 
-  if (!Wire.requestFrom(chip_address, (uint8_t) 32))      // receive 32 Bytes
-    return 0;
 
-  for (i=0; i < 32; i++)
-    irpixels[i+32] = Wire.read(); 
+  i2c_start_wait(chip_address+I2C_WRITE);
+  i2c_write(0x02);                       
+  i2c_write(0x01);                       
+  i2c_write(0x04);                       
+  i2c_write(0x10);
+
+  if (i2c_rep_start(chip_address+I2C_READ))
+    return 0;
+  
+  for (i=0; i < 32-1; i++)
+    irpixels[i+32] = i2c_readAck();
+  irpixels[i+32] = i2c_readNak();
+  i2c_stop();
+
+  //Line 3
+
+  i2c_start_wait(chip_address+I2C_WRITE);
+  i2c_write(0x02);                       
+  i2c_write(0x02);                       
+  i2c_write(0x04);                       
+  i2c_write(0x10);
+
+  if (i2c_rep_start(chip_address+I2C_READ))
+    return 0;
+  
+  for (i=0; i < 32-1; i++)
+    irpixels[i+64] = i2c_readAck();
+  irpixels[i+64] = i2c_readNak();
+  i2c_stop();
+
+  //Line 4
+
+  i2c_start_wait(chip_address+I2C_WRITE);
+  i2c_write(0x02);                       
+  i2c_write(0x03);                       
+  i2c_write(0x04);                       
+  i2c_write(0x10);
+
+  if (i2c_rep_start(chip_address+I2C_READ))
+    return 0;
+  
+  for (i=0; i < 32-1; i++)
+    irpixels[i+96] = i2c_readAck();
+  irpixels[i+96] = i2c_readNak();
+  i2c_stop();
+
+
+
+///  Wire.beginTransmission(chip_address);       // Adresse des Chips
+///  Wire.write (0x02);                          // command: read 1 line
+///  Wire.write (0x00);                          // start address
+///  Wire.write (0x04);                          // Address step
+///  Wire.write (0x10);                          // Number of reads    // nur erste 32 Bytes statt 128
+///  Wire.endTransmission(0);
+ 
+///  if (!Wire.requestFrom(chip_address, (uint8_t) 32))      // receive 32 Bytes
+///    return 0;
+
+///  for (i=0; i < 32; i++)
+///    irpixels[i] = Wire.read(); 
+
+  // Line 2
+///  Wire.beginTransmission(chip_address);       // Adresse des Chips
+///  Wire.write (0x02);                          // command: read 1 line
+///  Wire.write (0x01);                          // start address
+///  Wire.write (0x04);                          // Address step
+///  Wire.write (0x10);                          // Number of reads    // nur erste 32 Bytes statt 128
+///  Wire.endTransmission(0);
+ 
+///  if (!Wire.requestFrom(chip_address, (uint8_t) 32))      // receive 32 Bytes
+///    return 0;
+
+///  for (i=0; i < 32; i++)
+///    irpixels[i+32] = Wire.read(); 
 
   // Line 3
-  Wire.beginTransmission(chip_address);       // Adresse des Chips
-  Wire.write (0x02);                          // command: read 1 line
-  Wire.write (0x02);                          // start address
-  Wire.write (0x04);                          // Address step
-  Wire.write (0x10);                          // Number of reads    // nur erste 32 Bytes statt 128
-  Wire.endTransmission(0);
+///  Wire.beginTransmission(chip_address);       // Adresse des Chips
+///  Wire.write (0x02);                          // command: read 1 line
+///  Wire.write (0x02);                          // start address
+///  Wire.write (0x04);                          // Address step
+///  Wire.write (0x10);                          // Number of reads    // nur erste 32 Bytes statt 128
+///  Wire.endTransmission(0);
  
-  if (!Wire.requestFrom(chip_address, (uint8_t) 32))      // receive 32 Bytes
-    return 0;
+///  if (!Wire.requestFrom(chip_address, (uint8_t) 32))      // receive 32 Bytes
+///    return 0;
 
-  for (i=0; i < 32; i++)
-    irpixels[i+64] = Wire.read(); 
+///  for (i=0; i < 32; i++)
+///    irpixels[i+64] = Wire.read(); 
 
   // Line 4
-  Wire.beginTransmission(chip_address);       // Adresse des Chips
-  Wire.write (0x02);                          // command: read 1 line
-  Wire.write (0x03);                          // start address
-  Wire.write (0x04);                          // Address step
-  Wire.write (0x10);                          // Number of reads    // nur erste 32 Bytes statt 128
-  Wire.endTransmission(0);
+///  Wire.beginTransmission(chip_address);       // Adresse des Chips
+///  Wire.write (0x02);                          // command: read 1 line
+///  Wire.write (0x03);                          // start address
+///  Wire.write (0x04);                          // Address step
+///  Wire.write (0x10);                          // Number of reads    // nur erste 32 Bytes statt 128
+///  Wire.endTransmission(0);
  
-  if (!Wire.requestFrom(chip_address, (uint8_t) 32))      // receive 32 Bytes
-    return 0;
+///  if (!Wire.requestFrom(chip_address, (uint8_t) 32))      // receive 32 Bytes
+///    return 0;
 
-  for (i=0; i < 32; i++)
-    irpixels[i+96] = Wire.read(); 
-
-
-  
+///  for (i=0; i < 32; i++)
+///    irpixels[i+96] = Wire.read();  
   
   return 1;
 }

@@ -3,24 +3,12 @@
 #define __MLX90621__
 
 // pruefe, ob wire.h angepasst wurde:
-#include <Wire.h>
-#include <utility/twi.h>
-
-#if BUFFER_LENGTH < 64
-  #error "BUFFER_LENGTH in Wire.h nicht auf 64 gesetzt."
-#endif
-
-#if TWI_BUFFER_LENGTH < 64
-  #error "TWI_BUFFER_LENGTH in twi.h nicht auf 64 gesetzt."
-#endif
-
-#include <Arduino.h>
 
 class MLX90621
 {
   private:
-    uint8_t eeprom_dump_address = 0x50;
-    uint8_t chip_address = 0x60;
+    uint8_t eeprom_dump_address = 0x50 << 1;
+    uint8_t chip_address = 0x60 << 1;
     uint16_t configreg;
     int16_t vcp;
     int16_t acp;
