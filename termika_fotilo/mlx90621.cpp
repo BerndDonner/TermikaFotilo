@@ -349,70 +349,37 @@ int16_t MLX90621::read_compensation (void)
 */
 uint8_t MLX90621::read_ir (void)
 {
-  uint8_t i;
+  uint8_t i, j;
   
-  // Line 1
-
   i2c_start_wait(chip_address+I2C_WRITE);     // Adresse des Chips
-  i2c_write(0x02);                            // command: read 1 line
+  i2c_write(0x02);                            // read command, page 31/44
   i2c_write(0x00);                            // start address
-  i2c_write(0x04);                            // Address step
-  i2c_write(0x10);                            // Number of reads    // nur erste 32 Bytes statt 128
+  i2c_write(0x01);                            // Address step
+  i2c_write(0x40);                            // read 0x40=64 words <---> read 0x40*2 = 128 bytes
 
-  if (i2c_rep_start(chip_address+I2C_READ))   // receive 32 Bytes
+  if (i2c_rep_start(chip_address+I2C_READ))   // receive 128 Bytes
     return 0;
   
-  for (i=0; i < 32-1; i++)
-    irpixels[i] = i2c_readAck();
-  irpixels[i] = i2c_readNak();
-  i2c_stop();
+  for (i=0; i < 0x10-1; i++)                  //loop unrolling is possible here for the compiler
+  {                                           //it would only be two loops iff the last read would not need a Not Acknowledge
+    for (j = 0; j < 0x04; j++)                //basically transposing the array of words that is read as an array of bytes
+    {
+      irpixels[(i + 0x10*j)*2]     = i2c_readAck();
+      irpixels[(i + 0x10*j)*2 + 1] = i2c_readAck();
 
-  // Line 2
+    }
+  }
 
-  i2c_start_wait(chip_address+I2C_WRITE);
-  i2c_write(0x02);                       
-  i2c_write(0x01);                       
-  i2c_write(0x04);                       
-  i2c_write(0x10);
+  for (j = 0; j < 0x04-1; j++)
+  {
+    irpixels[(i + 0x10*j)*2]     = i2c_readAck();
+    irpixels[(i + 0x10*j)*2 + 1] = i2c_readAck();
 
-  if (i2c_rep_start(chip_address+I2C_READ))
-    return 0;
-  
-  for (i=0; i < 32-1; i++)
-    irpixels[i+32] = i2c_readAck();
-  irpixels[i+32] = i2c_readNak();
-  i2c_stop();
+  }
 
-  //Line 3
+  irpixels[(i + 0x10*j)*2]     = i2c_readAck();
+  irpixels[(i + 0x10*j)*2 + 1] = i2c_readNak();
 
-  i2c_start_wait(chip_address+I2C_WRITE);
-  i2c_write(0x02);                       
-  i2c_write(0x02);                       
-  i2c_write(0x04);                       
-  i2c_write(0x10);
-
-  if (i2c_rep_start(chip_address+I2C_READ))
-    return 0;
-  
-  for (i=0; i < 32-1; i++)
-    irpixels[i+64] = i2c_readAck();
-  irpixels[i+64] = i2c_readNak();
-  i2c_stop();
-
-  //Line 4
-
-  i2c_start_wait(chip_address+I2C_WRITE);
-  i2c_write(0x02);                       
-  i2c_write(0x03);                       
-  i2c_write(0x04);                       
-  i2c_write(0x10);
-
-  if (i2c_rep_start(chip_address+I2C_READ))
-    return 0;
-  
-  for (i=0; i < 32-1; i++)
-    irpixels[i+96] = i2c_readAck();
-  irpixels[i+96] = i2c_readNak();
   i2c_stop();
 
   return 1;
