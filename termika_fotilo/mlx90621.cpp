@@ -137,29 +137,6 @@ void MLX90621::read_all_irfield (float temperatures[16][4])
 }
 
 /**
-  @brief  Liest 64 Bytes aus dem EEPROM und speichert diese in eepromMLX
-  @param  Startadresse
-  @return none
-*/
-uint8_t MLX90621::read_eeprom_64 (uint8_t start)
-{
-  uint16_t i;
-
-  i2c_start_wait(eeprom_dump_address+I2C_WRITE);   // Adresse des Chips: Whole EEPROM dump
-  i2c_write(start);                                // Command: Read the whole EEPROM (start address)
-  if (i2c_rep_start(eeprom_dump_address+I2C_READ))
-    return 0;
-
-  for (i = start; i < (start + 64 - 1); i++)
-    eepromMLX[i] = i2c_readAck();
-
-  eepromMLX[i] = i2c_readNak();
-  i2c_stop();
-
-  return 1;
-}
-
-/**
   @brief  Liest 256 Bytes aus dem EEPROM und speichert die Daten in eepromMLX
   @param  none
   @return none
@@ -168,14 +145,16 @@ uint8_t MLX90621::read_eeprom (void)
 {
   uint16_t i;
 
-  if (!read_eeprom_64 (0x00))
+  i2c_start_wait(eeprom_dump_address+I2C_WRITE);   // Adresse des Chips: Whole EEPROM dump
+  i2c_write(0x00);                                 // Command: Read the whole EEPROM (start address)
+  if (i2c_rep_start(eeprom_dump_address+I2C_READ))
     return 0;
-  if (!read_eeprom_64 (0x40))
-    return 0;
-  if (!read_eeprom_64 (0x80))
-    return 0;
-  if (!read_eeprom_64 (0xC0))
-    return 0;
+
+  for (i = 0; i < (0xFF - 1); i++)
+    eepromMLX[i] = i2c_readAck();
+
+  eepromMLX[i] = i2c_readNak();
+  i2c_stop();
 
   return 1;
 }

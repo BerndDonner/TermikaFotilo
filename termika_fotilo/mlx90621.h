@@ -29,7 +29,6 @@ class MLX90621
     uint8_t ksscale;
 
     uint8_t eepromMLX[256];     // Buffer
-    uint8_t read_eeprom_64 (uint8_t);
     uint8_t read_eeprom (void);
     void write_trim (uint8_t);
     void write_config (uint8_t, uint8_t);
