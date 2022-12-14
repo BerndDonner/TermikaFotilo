@@ -42,3 +42,12 @@ PROFILING --- Laufzeit der Hauptschleife: 1067964
 PROFILING --- Laufzeit der Hauptschleife: 1067984
 PROFILING --- Laufzeit der Hauptschleife: 1067944
 
+Der Sketch verwendet 20408 Bytes (66%) des Programmspeicherplatzes. Das Maximum sind 30720 Bytes.
+Globale Variablen verwenden 1475 Bytes (72%) des dynamischen Speichers, 573 Bytes für lokale Variablen verbleiben. Das Maximum sind 2048 Bytes.
+
+Neue i2cmaster Library
+
+Der Sketch verwendet 18386 Bytes (59%) des Programmspeicherplatzes. Das Maximum sind 30720 Bytes.
+Globale Variablen verwenden 1099 Bytes (53%) des dynamischen Speichers, 949 Bytes für lokale Variablen verbleiben. Das Maximum sind 2048 Bytes.
+
+
