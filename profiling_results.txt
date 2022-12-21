@@ -68,3 +68,26 @@ PROFILING --- Laufzeit der Hauptschleife: 912624
 PROFILING --- Laufzeit der Hauptschleife: 906100
 PROFILING --- Laufzeit der Hauptschleife: 932240
 PROFI
+
+Erste Optimirungen des Farbhandlings:
+
+PROFILING --- Laufzeit der Hauptschleife: 831524
+PROFILING --- Laufzeit der Hauptschleife: 831576
+PROFILING --- Laufzeit der Hauptschleife: 831720
+PROFILING --- Laufzeit der Hauptschleife: 831708
+PROFILING --- Laufzeit der Hauptschleife: 831576
+PROFILING --- Laufzeit der Hauptschleife: 831324
+PROFILING --- Laufzeit der Hauptschleife: 831236
+PROFILING --- Laufzeit der Hauptschleife: 831244
+PROFILING --- Laufzeit der Hauptschleife: 831500
+
+Optimierung der SPI Kommandos
+
+PROFILING --- Laufzeit der Hauptschleife: 645344
+PROFILING --- Laufzeit der Hauptschleife: 645048
+PROFILING --- Laufzeit der Hauptschleife: 645032
+PROFILING --- Laufzeit der Hauptschleife: 643660
+PROFILING --- Laufzeit der Hauptschleife: 643516
+PROFILING --- Laufzeit der Hauptschleife: 643520
+PROFILING --- Laufzeit der Hauptschleife: 644852
+PROFILING --- Laufzeit der Hauptschleife: 644868

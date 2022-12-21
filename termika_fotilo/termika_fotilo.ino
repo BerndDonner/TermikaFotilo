@@ -274,6 +274,12 @@ void OutTempField(void)
   {
     for(int xi = 0; xi < 16-1; ++xi)
     {
+      TFTscreen.setAddrWindow(xi*ZOOM + 1, yi*ZOOM + 75 + 1, (xi+1)*ZOOM, (yi+1)*ZOOM + 75);
+      SPI.beginTransaction(spisettings);
+      
+      *rsport |=  rspinmask;
+      *csport &= ~cspinmask;
+
       for(int yd = 0; yd <  ZOOM; ++yd)
       {
         for(int xd = 0; xd < ZOOM; ++xd)
@@ -286,9 +292,14 @@ void OutTempField(void)
           hue = (MAXTEMP - interpoltemp) / (float)(MAXTEMP - MINTEMP);
           HSVtoRGB (R, G, B, hue);
           uint16_t color = ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | (B >> 3);
-          drawPixel(xi*ZOOM+xd + 1, yi*ZOOM+yd + 75 + 1, color);                    // interpol. Pixel
+          SPI.transfer(color >> 8);
+          SPI.transfer(color);
         }
       }
+
+
+      *csport |= cspinmask;
+      SPI.endTransaction();
     }
   }
 }
