@@ -28,7 +28,7 @@ float Weight[ZOOM+1][ZOOM+1];
 
 void StartScreen(void);
 void OutAmbientTemp(void);
-void HSVtoRGB(float &, float &, float &, float);
+void HSVtoRGB(uint8_t &, uint8_t &, uint8_t &, float);
 void OutTempField(void);
 float LinInterpol (float, float, uint8_t, uint8_t, uint8_t);
 

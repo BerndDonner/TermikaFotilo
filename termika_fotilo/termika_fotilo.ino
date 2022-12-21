@@ -90,14 +90,8 @@ void drawPixel(int16_t x, int16_t y, uint16_t color)
   TFTscreen.setAddrWindow(x,y,x+1,y+1);
   SPI.beginTransaction(spisettings);
 
-#ifdef __ARDUINO_ARC__
-  digitalWrite(DC_, HIGH);
-#else
   *rsport |=  rspinmask;
-#endif
   *csport &= ~cspinmask;
-
-//  if (tabcolor == INITR_BLACKTAB)   color = swapcolor(color);
 
   SPI.transfer(color >> 8);
   SPI.transfer(color);
@@ -116,7 +110,7 @@ void drawPixel(int16_t x, int16_t y, uint16_t color)
 void StartScreen(void)
 {
   uint8_t i;
-  float R, G, B;
+  uint8_t R, G, B;
   float gradstep;
   char puffer[10];
   
@@ -150,7 +144,7 @@ void StartScreen(void)
   for (i=0; i < 103; i++)                 // 103 Farb-Schritte werden angezeigt
   {
     HSVtoRGB (R, G, B, i/103.0);        // 320/103  
-    TFTscreen.stroke (RGB(R * 255, G * 255, B * 255)); 
+    TFTscreen.stroke (RGB(R, G, B)); 
     TFTscreen.line (150, i+25, 159, i+25);
   }
 
@@ -205,23 +199,24 @@ void OutAmbientTemp(void)
           V = 0..1
   @return none
 */
-void HSVtoRGB(float &r, float &g, float &b, float h) 
+void HSVtoRGB(uint8_t &r, uint8_t &g, uint8_t &b, float h) 
 {
    int i;
-   float f, q, t;
+   float f;
+   uint8_t q, t;
    h *= (16 / (float)3);           // sector 0 to 5
    i = floor( h );
    f = h - i;         // factorial part of h
-   q = 0.5 * ( 1 - f );
-   t = 0.5 * f;
+   q = 255*0.5 * ( 1 - f );
+   t = 255*0.5 * f;
    switch( i ) {
-      case 0: r = 0.5; g = t;   b = 0;   break;
-      case 1: r = q;   g = 0.5; b = 0;   break;
-      case 2: r = 0;   g = 0.5; b = t;   break;
-      case 3: r = 0;   g = q;   b = 0.5; break;
-      case 4: r = t;   g = 0;   b = 0.5; break;
+      case 0: r = 127; g = t;   b = 0;   break;
+      case 1: r = q;   g = 127; b = 0;   break;
+      case 2: r = 0;   g = 127; b = t;   break;
+      case 3: r = 0;   g = q;   b = 127; break;
+      case 4: r = t;   g = 0;   b = 127; break;
       default:  // case 5:
-              r = 0.5; g = 0;   b = q;   break;
+              r = 127; g = 0;   b = q;   break;
    }
 }
 
@@ -237,7 +232,7 @@ void OutTempField(void)
   float temps[16][4];
   float i, i1, i2;
   float hue;
-  float R, G, B;
+  uint8_t R, G, B;
   float interpoltemp;
   
   MLXtemp.read_all_irfield (temps);
@@ -261,8 +256,8 @@ void OutTempField(void)
     {
       hue = (MAXTEMP - temps[x][y]) / (float)(MAXTEMP - MINTEMP);
       HSVtoRGB (R, G, B, hue);        
-      TFTscreen.stroke (RGB(R * 255, G * 255, B * 255));
-      TFTscreen.fill (RGB(R * 255, G * 255, B * 255)); 
+      TFTscreen.stroke (RGB(R, G, B));
+      TFTscreen.fill (RGB(R, G, B)); 
 
       TFTscreen.point (x + 1, y + 28);                                // 1:1 Datenfeld
       TFTscreen.rect (x * ZOOM + 1, y * ZOOM + 41, ZOOM, ZOOM);       // Daten xZOOM
@@ -290,10 +285,7 @@ void OutTempField(void)
 
           hue = (MAXTEMP - interpoltemp) / (float)(MAXTEMP - MINTEMP);
           HSVtoRGB (R, G, B, hue);
-          uint8_t r = R*255;
-          uint8_t g = G*255;
-          uint8_t b = B*255;
-          uint16_t color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+          uint16_t color = ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | (B >> 3);
           drawPixel(xi*ZOOM+xd + 1, yi*ZOOM+yd + 75 + 1, color);                    // interpol. Pixel
         }
       }
