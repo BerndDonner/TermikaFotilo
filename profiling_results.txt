@@ -50,4 +50,21 @@ Neue i2cmaster Library
 Der Sketch verwendet 18386 Bytes (59%) des Programmspeicherplatzes. Das Maximum sind 30720 Bytes.
 Globale Variablen verwenden 1099 Bytes (53%) des dynamischen Speichers, 949 Bytes für lokale Variablen verbleiben. Das Maximum sind 2048 Bytes.
 
+Farbcode etwas aufgeräumt:
 
+PROFILING --- Laufzeit der Hauptschleife: 1022280
+PROFILING --- Laufzeit der Hauptschleife: 1021860
+PROFILING --- Laufzeit der Hauptschleife: 1022292
+PROFILING --- Laufzeit der Hauptschleife: 1022212
+PROFILING --- Laufzeit der Hauptschleife: 1021540
+PROFILING --- Laufzeit der Hauptschleife: 1022756
+
+Delay raus:
+
+PROFILING --- Laufzeit der Hauptschleife: 916580
+PROFILING --- Laufzeit der Hauptschleife: 909712
+PROFILING --- Laufzeit der Hauptschleife: 913340
+PROFILING --- Laufzeit der Hauptschleife: 912624
+PROFILING --- Laufzeit der Hauptschleife: 906100
+PROFILING --- Laufzeit der Hauptschleife: 932240
+PROFI

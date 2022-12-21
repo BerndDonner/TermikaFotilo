@@ -8,9 +8,8 @@ uint8_t RST_ = 8;
 // Farb-Spektrum
 const int8_t MINTEMP = -5;
 const uint8_t MAXTEMP = 30;
-const uint16_t HUEMAX = 320;    // Schrittweite für Farbstrahl. Eigentlich 360 aber wir wollen die lila Farben etwas vermeiden, weil ähnlich wie rot
 
-const uint8_t ZOOM = 8;         // Vergroesserungfaktor
+const uint8_t ZOOM = 7;         // Vergroesserungfaktor
 float Weight[ZOOM+1][ZOOM+1];
 
 
@@ -29,11 +28,9 @@ float Weight[ZOOM+1][ZOOM+1];
 
 void StartScreen(void);
 void OutAmbientTemp(void);
-void HSVtoRGB(float &, float &, float &, float, float, float);
+void HSVtoRGB(float &, float &, float &, float);
 void OutTempField(void);
 float LinInterpol (float, float, uint8_t, uint8_t, uint8_t);
-float FindMinTemp (float *);
-float FindMaxTemp (float *);
 
 
 

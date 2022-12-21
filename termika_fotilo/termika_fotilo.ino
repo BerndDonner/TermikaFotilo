@@ -50,7 +50,6 @@ void loop()
     #endif
     OutAmbientTemp();
     OutTempField();
-    delay(100);         // etwas weniger Stress
     #ifdef PROFILING
       time_stop = micros();
       Serial.print("PROFILING --- Laufzeit der Hauptschleife: ");
@@ -112,7 +111,7 @@ void StartScreen(void)
 
   for (i=0; i < 103; i++)                 // 103 Farb-Schritte werden angezeigt
   {
-    HSVtoRGB (R, G, B, i * (HUEMAX/103.0), 1, .5);        // 320/103  
+    HSVtoRGB (R, G, B, i/103.0);        // 320/103  
     TFTscreen.stroke (RGB(R * 255, G * 255, B * 255)); 
     TFTscreen.line (150, i+25, 159, i+25);
   }
@@ -168,28 +167,23 @@ void OutAmbientTemp(void)
           V = 0..1
   @return none
 */
-void HSVtoRGB(float &r, float &g, float &b, float h, float s, float v) 
+void HSVtoRGB(float &r, float &g, float &b, float h) 
 {
    int i;
-   float f, p, q, t;
-   if( s == 0 ) { // achromatisch (Grau)
-      r = g = b = v;
-      return;
-   }
-   h /= 60;           // sector 0 to 5
+   float f, q, t;
+   h *= (16 / (float)3);           // sector 0 to 5
    i = floor( h );
    f = h - i;         // factorial part of h
-   p = v * ( 1 - s );
-   q = v * ( 1 - s * f );
-   t = v * ( 1 - s * ( 1 - f ) );
+   q = 0.5 * ( 1 - f );
+   t = 0.5 * f;
    switch( i ) {
-      case 0: r = v; g = t; b = p; break;
-      case 1: r = q; g = v; b = p; break;
-      case 2: r = p; g = v; b = t; break;
-      case 3: r = p; g = q; b = v; break;
-      case 4: r = t; g = p; b = v; break;
+      case 0: r = 0.5; g = t;   b = 0;   break;
+      case 1: r = q;   g = 0.5; b = 0;   break;
+      case 2: r = 0;   g = 0.5; b = t;   break;
+      case 3: r = 0;   g = q;   b = 0.5; break;
+      case 4: r = t;   g = 0;   b = 0.5; break;
       default:  // case 5:
-         r = v; g = p; b = q; break;
+              r = 0.5; g = 0;   b = q;   break;
    }
 }
 
@@ -227,8 +221,8 @@ void OutTempField(void)
   {
     for (x = 0; x < 16; x++)       
     {
-      hue = HUEMAX - (temps[x][y] + abs(MINTEMP)) * (HUEMAX / (float)(MAXTEMP + abs(MINTEMP)));
-      HSVtoRGB (R, G, B, hue, 1, .5);        
+      hue = (MAXTEMP - temps[x][y]) / (float)(MAXTEMP - MINTEMP);
+      HSVtoRGB (R, G, B, hue);        
       TFTscreen.stroke (RGB(R * 255, G * 255, B * 255));
       TFTscreen.fill (RGB(R * 255, G * 255, B * 255)); 
 
@@ -256,8 +250,8 @@ void OutTempField(void)
                          temps[xi  ][yi+1] * Weight[xd     ][ZOOM-yd] +
                          temps[xi+1][yi+1] * Weight[ZOOM-xd][ZOOM-yd];
 
-          hue = HUEMAX - (interpoltemp + abs(MINTEMP)) * (HUEMAX / (float)(MAXTEMP + abs(MINTEMP)));
-          HSVtoRGB (R, G, B, hue, 1, .5);        
+          hue = (MAXTEMP - interpoltemp) / (float)(MAXTEMP - MINTEMP);
+          HSVtoRGB (R, G, B, hue);        
           TFTscreen.stroke (RGB(R * 255, G * 255, B * 255));  
           TFTscreen.point (xi*ZOOM+xd + 1, yi*ZOOM+yd + 75 + 1);                    // interpol. Pixel
         }
@@ -265,51 +259,3 @@ void OutTempField(void)
     }
   }
 }
-
-/**
-  @brief  Ermittler kleinste Temperatur
-  @param  Temp-Feld
-  @return Minimum
-*/
-float FindMinTemp (float temperatures[])
-{
-  uint8_t i;
-  float temp = 300.0;     // maximal possible Temp
-
-  for (i = 0; i < 64; i++)
-  {
-    if (temperatures[i] < temp)
-      temp = temperatures[i];
-  }
-
-  return temp;
-}
-
-/**
-  @brief  Ermittler hoechste Temperatur
-  @param  Temp-Feld
-  @return Maximoum
-*/
-float FindMaxTemp (float temperatures[])
-{
-  uint8_t i;
-  float temp = -20.0;     // min. possible Temp
-
-  for (i = 0; i < 64; i++)
-  {
-    if (temperatures[i] > temp)
-      temp = temperatures[i];
-  }
-
-  return temp;
-}
-
-
-
-
-
-
-
-
-
-

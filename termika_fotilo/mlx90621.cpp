@@ -4,6 +4,7 @@
  * Andere Typen sind aehnlich aber nutzen andere Berechnung
  * 
  * BD: TODO: Inconsistent ERROR Codes!!!
+ * BD: get rid of delays? 
  */
 
 
@@ -150,7 +151,7 @@ uint8_t MLX90621::read_eeprom (void)
   if (i2c_rep_start(eeprom_dump_address+I2C_READ))
     return 0;
 
-  for (i = 0; i < (0xFF - 1); i++)
+  for (i = 0; i < (0xFF - 1); i++)                 // read all 0xFF bytes of the EEPROM
     eepromMLX[i] = i2c_readAck();
 
   eepromMLX[i] = i2c_readNak();
@@ -345,7 +346,6 @@ uint8_t MLX90621::read_ir (void)
     {
       irpixels[(i + 0x10*j)*2]     = i2c_readAck();
       irpixels[(i + 0x10*j)*2 + 1] = i2c_readAck();
-
     }
   }
 
@@ -353,7 +353,6 @@ uint8_t MLX90621::read_ir (void)
   {
     irpixels[(i + 0x10*j)*2]     = i2c_readAck();
     irpixels[(i + 0x10*j)*2 + 1] = i2c_readAck();
-
   }
 
   irpixels[(i + 0x10*j)*2]     = i2c_readAck();
