@@ -201,14 +201,17 @@ void OutAmbientTemp(void)
 */
 void HSVtoRGB(uint8_t &r, uint8_t &g, uint8_t &b, float h) 
 {
-   int i;
-   float f;
+   uint8_t i;
+   uint8_t f;
+   uint16_t h_i;
    uint8_t q, t;
-   h *= (16 / (float)3);           // sector 0 to 5
-   i = floor( h );
-   f = h - i;         // factorial part of h
-   q = 255*0.5 * ( 1 - f );
-   t = 255*0.5 * f;
+
+   h_i = h * 0x555; //(16*256 / (float)3);           // sector 0 to 5
+   i = h_i >> 8;
+   f = h_i & 0x00ff;         // factorial part of h
+
+   q = (0x00ff * (0x0100 - (uint16_t) f )) >> 9;
+   t = (0x00ff * f) >> 9;
    switch( i ) {
       case 0: r = 127; g = t;   b = 0;   break;
       case 1: r = q;   g = 127; b = 0;   break;
@@ -270,9 +273,9 @@ void OutTempField(void)
 //    Serial.println("***");
 
   // Interpolation mit Tabelle
-  for(int yi = 0; yi <  4-1; ++yi)
+  for(uint8_t yi = 0; yi <  4-1; ++yi)
   {
-    for(int xi = 0; xi < 16-1; ++xi)
+    for(uint8_t xi = 0; xi < 16-1; ++xi)
     {
       TFTscreen.setAddrWindow(xi*ZOOM + 1, yi*ZOOM + 75 + 1, (xi+1)*ZOOM, (yi+1)*ZOOM + 75);
       SPI.beginTransaction(spisettings);
@@ -280,9 +283,9 @@ void OutTempField(void)
       *rsport |=  rspinmask;
       *csport &= ~cspinmask;
 
-      for(int yd = 0; yd <  ZOOM; ++yd)
+      for(uint8_t yd = 0; yd <  ZOOM; ++yd)
       {
-        for(int xd = 0; xd < ZOOM; ++xd)
+        for(uint8_t xd = 0; xd < ZOOM; ++xd)
         {
           interpoltemp = temps[xi  ][yi  ] * Weight[xd     ][yd     ] +
                          temps[xi+1][yi  ] * Weight[ZOOM-xd][yd     ] +
