@@ -26,6 +26,13 @@
 #define PROFILING
 #define RGB(r, g, b)   r, g, b
 
+SPISettings spisettings = SPISettings(4000000L, MSBFIRST, SPI_MODE0);
+volatile uint8_t *rsport;
+uint8_t           rspinmask;
+volatile uint8_t *csport;
+uint8_t           cspinmask;
+
+
 
 TFT TFTscreen = TFT(CS_, DC_, RST_);    // TFT Konstruktor
 MLX90621 MLXtemp;                       // Objekt fuer Tempsensor erzeugen
@@ -38,6 +45,11 @@ void loop()
     unsigned long time_start, time_stop;
     Serial.begin(9600);
   #endif
+  rsport    = portOutputRegister(digitalPinToPort(DC_));
+  rspinmask = digitalPinToBitMask(DC_);
+  csport    = portOutputRegister(digitalPinToPort(CS_));
+  cspinmask = digitalPinToBitMask(CS_);
+
   initWeight();  
   StartScreen();
   while (!MLXtemp.init())        // MLX90620 init failed
@@ -69,6 +81,32 @@ void initWeight()
     }
   }
 }
+
+
+void drawPixel(int16_t x, int16_t y, uint16_t color)
+{
+  if((x < 0) ||(x >= ST7735_TFTHEIGHT) || (y < 0) || (y >= ST7735_TFTWIDTH)) return;
+
+  TFTscreen.setAddrWindow(x,y,x+1,y+1);
+  SPI.beginTransaction(spisettings);
+
+#ifdef __ARDUINO_ARC__
+  digitalWrite(DC_, HIGH);
+#else
+  *rsport |=  rspinmask;
+#endif
+  *csport &= ~cspinmask;
+
+//  if (tabcolor == INITR_BLACKTAB)   color = swapcolor(color);
+
+  SPI.transfer(color >> 8);
+  SPI.transfer(color);
+
+  *csport |= cspinmask;
+  SPI.endTransaction();
+}
+
+
 
 /**
   @brief  Zeichnet den Grundaufbau auf das Display
@@ -251,9 +289,12 @@ void OutTempField(void)
                          temps[xi+1][yi+1] * Weight[ZOOM-xd][ZOOM-yd];
 
           hue = (MAXTEMP - interpoltemp) / (float)(MAXTEMP - MINTEMP);
-          HSVtoRGB (R, G, B, hue);        
-          TFTscreen.stroke (RGB(R * 255, G * 255, B * 255));  
-          TFTscreen.point (xi*ZOOM+xd + 1, yi*ZOOM+yd + 75 + 1);                    // interpol. Pixel
+          HSVtoRGB (R, G, B, hue);
+          uint8_t r = R*255;
+          uint8_t g = G*255;
+          uint8_t b = B*255;
+          uint16_t color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+          drawPixel(xi*ZOOM+xd + 1, yi*ZOOM+yd + 75 + 1, color);                    // interpol. Pixel
         }
       }
     }
