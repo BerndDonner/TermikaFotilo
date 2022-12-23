@@ -5,12 +5,15 @@ void setup() {
   uint8_t r, g, b;
   uint16_t colornew;
 
-  for (uint16_t h_i = 0; h_i <= 0x0555; ++h_i)
+  for (uint16_t h_i = 0; h_i <= 0x0555; h_i += 4)
   {
-    HSVtoRGBtable(r, g, b, h_i); 
+        
+    HSVtoRGBtable(r, g, b, h_i >> 2); 
     uint16_t color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-    Serial.print(color);
-    Serial.println(", ");
+    Serial.print("0x");
+    Serial.print(color, HEX);
+    Serial.print(", ");
+
   }
 
 /**

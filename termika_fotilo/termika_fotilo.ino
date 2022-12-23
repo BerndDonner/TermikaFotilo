@@ -293,8 +293,8 @@ void OutTempField(void)
                          temps[xi+1][yi+1] * Weight[ZOOM-xd][ZOOM-yd];
 
           hue = (MAXTEMP - interpoltemp) / (float)(MAXTEMP - MINTEMP);
-          HSVtoRGB (R, G, B, hue);
-          uint16_t color = ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | (B >> 3);
+          uint16_t h_i = ((uint16_t)(hue * 0x555)) >> 2;
+          uint16_t color = colormap[h_i];
           SPI.transfer(color >> 8);
           SPI.transfer(color);
         }
