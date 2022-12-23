@@ -5,6 +5,15 @@ void setup() {
   uint8_t r, g, b;
   uint16_t colornew;
 
+  for (uint16_t h_i = 0; h_i <= 0x0555; ++h_i)
+  {
+    HSVtoRGBtable(r, g, b, h_i); 
+    uint16_t color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+    Serial.print(color);
+    Serial.println(", ");
+  }
+
+/**
   for (float h = 0.0; h < 1.0; h += 0.0001)
 //  float h = 0.1000;
   {
@@ -24,7 +33,7 @@ void setup() {
       colornew = colorold;
     }
   }
-
+*/
 }
 
 void HSVtoRGBnew(uint8_t &r, uint8_t &g, uint8_t &b, float h) 
@@ -37,6 +46,16 @@ void HSVtoRGBnew(uint8_t &r, uint8_t &g, uint8_t &b, float h)
    h_i = h * 0x555; //(16*256 / (float)3);           // sector 0 to 5
 //   Serial.print("h_i: ");
 //   Serial.println(h_i);
+
+   HSVtoRGBtable(r, g, b, h_i); 
+}
+
+
+void HSVtoRGBtable(uint8_t &r, uint8_t &g, uint8_t &b, uint16_t h_i) 
+{
+   uint8_t i;
+   uint16_t f;
+   uint8_t q, t;
 
    i = h_i >> 8;
    f = h_i & 0x00ff;         // factorial part of h
