@@ -202,7 +202,7 @@ void OutAmbientTemp(void)
 void HSVtoRGB(uint8_t &r, uint8_t &g, uint8_t &b, float h) 
 {
    uint8_t i;
-   uint8_t f;
+   uint16_t f;
    uint16_t h_i;
    uint8_t q, t;
 
@@ -210,7 +210,7 @@ void HSVtoRGB(uint8_t &r, uint8_t &g, uint8_t &b, float h)
    i = h_i >> 8;
    f = h_i & 0x00ff;         // factorial part of h
 
-   q = (0x00ff * (0x0100 - (uint16_t) f )) >> 9;
+   q = (0x00ff * (0x0100 - f )) >> 9;
    t = (0x00ff * f) >> 9;
    switch( i ) {
       case 0: r = 127; g = t;   b = 0;   break;
