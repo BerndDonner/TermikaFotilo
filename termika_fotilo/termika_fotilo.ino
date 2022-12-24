@@ -83,25 +83,6 @@ void initWeight()
 }
 
 
-void drawPixel(int16_t x, int16_t y, uint16_t color)
-{
-  if((x < 0) ||(x >= ST7735_TFTHEIGHT) || (y < 0) || (y >= ST7735_TFTWIDTH)) return;
-
-  TFTscreen.setAddrWindow(x,y,x+1,y+1);
-  SPI.beginTransaction(spisettings);
-
-  *rsport |=  rspinmask;
-  *csport &= ~cspinmask;
-
-  SPI.transfer(color >> 8);
-  SPI.transfer(color);
-
-  *csport |= cspinmask;
-  SPI.endTransaction();
-}
-
-
-
 /**
   @brief  Zeichnet den Grundaufbau auf das Display
   @param  none
@@ -150,7 +131,7 @@ void StartScreen(void)
   {
     for (uint8_t j = 0; j < 10; ++j)
     {
-      uint16_t h_i = ((uint16_t)(i * 13)) >> 3; // 0x555 / 103dec = 13
+      uint8_t h_i = ((uint16_t)(i * 13)) >> 3; // 0x555 / 103dec = 13
       uint16_t color = colormap[h_i];
       SPI.transfer(color >> 8);
       SPI.transfer(color);
@@ -202,37 +183,6 @@ void OutAmbientTemp(void)
   
 }
 
-/**
-  @brief  Konvertiert einen HDV-Farbwert in RGB um (http://wisotop.de/rgb-nach-hsv.php)
-  @param  RGB-Werte als Call by reference (0..1)
-          H = 0..360
-          S = 0..1
-          V = 0..1
-  @return none
-*/
-void HSVtoRGB(uint8_t &r, uint8_t &g, uint8_t &b, float h) 
-{
-   uint8_t i;
-   uint16_t f;
-   uint16_t h_i;
-   uint8_t q, t;
-
-   h_i = h * 0x555; //(16*256 / (float)3);           // sector 0 to 5
-   i = h_i >> 8;
-   f = h_i & 0x00ff;         // factorial part of h
-
-   q = (0x00ff * (0x0100 - f )) >> 9;
-   t = (0x00ff * f) >> 9;
-   switch( i ) {
-      case 0: r = 127; g = t;   b = 0;   break;
-      case 1: r = q;   g = 127; b = 0;   break;
-      case 2: r = 0;   g = 127; b = t;   break;
-      case 3: r = 0;   g = q;   b = 127; break;
-      case 4: r = t;   g = 0;   b = 127; break;
-      default:  // case 5:
-              r = 127; g = 0;   b = q;   break;
-   }
-}
 
 /**
   @brief  Grafische Ausgabe
@@ -261,43 +211,79 @@ void OutTempField(void)
       temps[x][y] = i;
     }
   }
-  
+
 
   // Ausgabe des Temperaturfeldes auf Display
-  for (y = 0; y < 4; y++)
+  TFTscreen.setAddrWindow(1, 28, 16, 31);
+  SPI.beginTransaction(spisettings);
+     
+  *rsport |=  rspinmask;
+  *csport &= ~cspinmask;
+
+  for (uint8_t yi = 0; yi < 4; ++yi)
   {
-    for (x = 0; x < 16; x++)       
+    for (uint8_t xi = 0; xi < 16; ++xi)       
     {
-      hue = (MAXTEMP - temps[x][y]) / (float)(MAXTEMP - MINTEMP);
-      HSVtoRGB (R, G, B, hue);        
-      TFTscreen.stroke (RGB(R, G, B));
-      TFTscreen.fill (RGB(R, G, B)); 
-
-      TFTscreen.point (x + 1, y + 28);                                // 1:1 Datenfeld
-      TFTscreen.rect (x * ZOOM + 1, y * ZOOM + 41, ZOOM, ZOOM);       // Daten xZOOM
-
-//      dtostrf (temps[x][y], 6, 1, puffer);    // Ausgabe Zahlenwerte
-//      Serial.print (puffer);
+      hue = (MAXTEMP - temps[xi][yi]) / (float)(MAXTEMP - MINTEMP);
+      uint8_t h_i = ((uint16_t)(hue * 0x555)) >> 3;
+      uint16_t color = colormap[h_i];
+      SPI.transfer(color >> 8);
+      SPI.transfer(color);
     }
-//    Serial.println();
   }
-//    Serial.println("***");
+  *csport |= cspinmask;
+  SPI.endTransaction();
 
-  // Interpolation mit Tabelle
-  for(uint8_t yi = 0; yi <  4-1; ++yi)
+
+  // Ausgabe des Temperaturfeldes auf Display
+  for (uint8_t xi = 0; xi < 16; ++xi)       
   {
-    for(uint8_t xi = 0; xi < 16-1; ++xi)
-    {
-      TFTscreen.setAddrWindow(xi*ZOOM + 1, yi*ZOOM + 75 + 1, (xi+1)*ZOOM, (yi+1)*ZOOM + 75);
-      SPI.beginTransaction(spisettings);
+    TFTscreen.setAddrWindow(xi*ZOOM + 1, 0*ZOOM + 41, (xi+1)*ZOOM, 4*ZOOM + 40);
+    SPI.beginTransaction(spisettings);
       
-      *rsport |=  rspinmask;
-      *csport &= ~cspinmask;
+    *rsport |=  rspinmask;
+    *csport &= ~cspinmask;
+
+    for (uint8_t yi = 0; yi < 4; ++yi)
+    {
+      hue = (MAXTEMP - temps[xi][yi]) / (float)(MAXTEMP - MINTEMP);
+      uint8_t h_i = ((uint16_t)(hue * 0x555)) >> 3;
+      uint16_t color = colormap[h_i];
 
       for(uint8_t yd = 0; yd <  ZOOM; ++yd)
       {
         for(uint8_t xd = 0; xd < ZOOM; ++xd)
-        {
+        {          
+          SPI.transfer(color >> 8);
+          SPI.transfer(color);
+        }
+      }
+//      dtostrf (temps[xi][yi], 6, 1, puffer);    // Ausgabe Zahlenwerte
+//      Serial.print (puffer);
+    }
+//    Serial.println();
+    *csport |= cspinmask;
+    SPI.endTransaction();
+  }
+//    Serial.println("***");
+
+
+
+  // Bilineare Interpolation mit Tabelle
+  for(uint8_t xi = 0; xi < 16-1; ++xi)
+  {
+    TFTscreen.setAddrWindow(xi*ZOOM + 1, 0*ZOOM + 75 + 1, (xi+1)*ZOOM, 3*ZOOM + 75);
+    SPI.beginTransaction(spisettings);
+      
+    *rsport |=  rspinmask;
+    *csport &= ~cspinmask;
+
+    for(uint8_t yi = 0; yi <  4-1; ++yi)
+    {
+      for(uint8_t yd = 0; yd <  ZOOM; ++yd)
+      {
+        for(uint8_t xd = 0; xd < ZOOM; ++xd)
+        {          
           interpoltemp = temps[xi  ][yi  ] * Weight[xd     ][yd     ] +
                          temps[xi+1][yi  ] * Weight[ZOOM-xd][yd     ] +
                          temps[xi  ][yi+1] * Weight[xd     ][ZOOM-yd] +
@@ -310,10 +296,8 @@ void OutTempField(void)
           SPI.transfer(color);
         }
       }
-
-
-      *csport |= cspinmask;
-      SPI.endTransaction();
     }
+    *csport |= cspinmask;
+    SPI.endTransaction();
   }
 }

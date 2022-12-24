@@ -32,6 +32,14 @@ void HSVtoRGB(uint8_t &, uint8_t &, uint8_t &, float);
 void OutTempField(void);
 float LinInterpol (float, float, uint8_t, uint8_t, uint8_t);
 
+/**
+ * MINTEMP...MAXTEMP läuft eigentlich nur von Index 0x00..0xAA.
+ * ABER MAXTEMP heisst nicht, dass es nicht heisser werden kann!!!
+ * Damit noch irgend eine Farbe dargestellt wird, sind die Elemente von
+ * 0xAB..0xFF alle auf maximale Farbtemperatur eingestellt. Klar geht das
+ * besser. Bei MINTEMP liegt das analoge Problem vor.
+ */
+
 const uint16_t colormap[0x100] = {
   0x7800, 0x7800, 0x7820, 0x7840, 0x7860, 0x7880, 0x78a0, 0x78c0, 0x78e0,
   0x7900, 0x7920, 0x7940, 0x7960, 0x7980, 0x79a0, 0x79c0, 0x79e0, 0x7a00,

@@ -91,3 +91,13 @@ PROFILING --- Laufzeit der Hauptschleife: 643516
 PROFILING --- Laufzeit der Hauptschleife: 643520
 PROFILING --- Laufzeit der Hauptschleife: 644852
 PROFILING --- Laufzeit der Hauptschleife: 644868
+
+Weitere Optimierung SPI, Ausschließliche Verwendung von Colormap
+
+PROFILING --- Laufzeit der Hauptschleife: 432656
+PROFILING --- Laufzeit der Hauptschleife: 432528
+PROFILING --- Laufzeit der Hauptschleife: 432528
+PROFILING --- Laufzeit der Hauptschleife: 432536
+PROFILING --- Laufzeit der Hauptschleife: 432480
+PROFILING --- Laufzeit der Hauptschleife: 432476
+PROFILING --- Laufzeit der Hauptschleife: 432488
