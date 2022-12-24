@@ -9,7 +9,7 @@ uint8_t RST_ = 8;
 const int8_t MINTEMP = -5;
 const uint8_t MAXTEMP = 30;
 
-const uint8_t ZOOM = 8;         // Vergroesserungfaktor
+const uint8_t ZOOM = 7;         // Vergroesserungfaktor
 float Weight[ZOOM+1][ZOOM+1];
 
 

@@ -43,7 +43,7 @@ void loop()
 {
   #ifdef PROFILING
     unsigned long time_start, time_stop;
-    Serial.begin(9600);
+    Serial.begin(38400);
   #endif
   rsport    = portOutputRegister(digitalPinToPort(DC_));
   rspinmask = digitalPinToBitMask(DC_);
