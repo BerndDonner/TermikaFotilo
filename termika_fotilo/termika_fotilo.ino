@@ -141,13 +141,24 @@ void StartScreen(void)
   TFTscreen.rect (0, 40, 16*ZOOM+2, 4*ZOOM+2);          // Daten xZOOM
   TFTscreen.rect (0, 75, 15*ZOOM+2, 3*ZOOM+2);      // Daten xZOOM interpoliert
 
+  TFTscreen.setAddrWindow(150, 0+25, 159, 102+25);
+  SPI.beginTransaction(spisettings);
+  *rsport |=  rspinmask;
+  *csport &= ~cspinmask;
+
   for (i=0; i < 103; i++)                 // 103 Farb-Schritte werden angezeigt
   {
-    HSVtoRGB (R, G, B, i/103.0);        // 320/103  
-    TFTscreen.stroke (RGB(R, G, B)); 
-    TFTscreen.line (150, i+25, 159, i+25);
+    for (uint8_t j = 0; j < 10; ++j)
+    {
+      uint16_t h_i = ((uint16_t)(i * 13)) >> 3; // 0x555 / 103dec = 13
+      uint16_t color = colormap[h_i];
+      SPI.transfer(color >> 8);
+      SPI.transfer(color);
+    }
   }
 
+  *csport |= cspinmask;
+  SPI.endTransaction();
   TFTscreen.stroke (RGB(0xFF , 0xFF, 0xFF)); 
   TFTscreen.setTextSize (1);
   
@@ -293,7 +304,7 @@ void OutTempField(void)
                          temps[xi+1][yi+1] * Weight[ZOOM-xd][ZOOM-yd];
 
           hue = (MAXTEMP - interpoltemp) / (float)(MAXTEMP - MINTEMP);
-          uint16_t h_i = ((uint16_t)(hue * 0x555)) >> 2;
+          uint8_t h_i = ((uint16_t)(hue * 0x555)) >> 3;
           uint16_t color = colormap[h_i];
           SPI.transfer(color >> 8);
           SPI.transfer(color);
