@@ -27,6 +27,11 @@ class MLX90621
     float ta;
     int8_t ks4ee;
     uint8_t ksscale;
+    float ks4;
+    uint64_t tak4;
+    float vircpoffsetcompensated;
+
+
 
     uint8_t eepromMLX[256];     // Buffer
     uint8_t read_eeprom (void);

@@ -60,6 +60,16 @@ uint8_t MLX90621::init (void)
   ksta = (int16_t)(( eepromMLX[0xD7] << 8 ) | eepromMLX[0xD6]);   // KsTa (fixed scale coefficient = 20)
   ks4ee = (int8_t)eepromMLX[0xC4];
   ksscale = eepromMLX[0xC0];
+
+  float bcp = bcpee / (pow (2, biscale) * pow (2, 3 - ( (configreg >> 4) & 0x03)));           //keine Arraygröße nur einmal berechnen!!!
+  vircpoffsetcompensated = vcp - (acp + bcp * (ta - 25.0) );                                  //einmal für ta berechnen!!
+
+  // 7.3.3.1
+  ks4 = ks4ee / pow (2, ksscale + 8); //nur einmal berechnen
+  
+  // 7.3.3
+  tak4 = pow ( (ta + 273.15), 4);
+
   
   return 1;
 }
@@ -76,17 +86,13 @@ void MLX90621::read_all_irfield (float temperatures[16][4])
   uint8_t deltaai;               // IR pixel individual offset coefficient
   int8_t bieeprom;
   float bi;               // Individual Ta dependence (slope) of IR pixels offset
-  float bcp;
   uint8_t deltaalpha;      // Individual sensitivity coefficient
-  float viroffsetcompensated;     //
   float virtgccompensated;
-  float vircpoffsetcompensated;
+  float viroffsetcompensated;
   float vircompensated;
   float ai;
   float alphacomp;
   float alpha;
-  float ks4;
-  uint64_t tak4;
   float sx;
   float to;
   
@@ -103,33 +109,26 @@ void MLX90621::read_all_irfield (float temperatures[16][4])
   for (i = 0; i < 64; i++)
   {
     vir = (int16_t)(irpixels[i * 2 + 1] << 8 | irpixels[i * 2]);      
-    deltaai = eepromMLX[i];
-    bi = (int8_t)eepromMLX[0x40 + i];   
-    deltaalpha = eepromMLX[0x80 + i]; 
+    deltaai = eepromMLX[i]; //deltaai --> ai -->
+    bi = (int8_t)eepromMLX[0x40 + i];  //bi, ai --> bei gegebenen ta offset für vir 
+    deltaalpha = eepromMLX[0x80 + i]; //----> alpha, ta ---> alphacomp
 
     // 7.3.3.1 
     // Offset compensation
     ai = (acommon + deltaai * pow (2, aiscale)) / pow (2, ( (configreg >> 4) & 0x03));      // Bit 5:4 Config Register
     bi = bi / (pow (2, biscale) * pow (2, 3 - ( (configreg >> 4) & 0x03)));
-    viroffsetcompensated = vir - (ai + bi * (ta - 25.0));
+    viroffsetcompensated = ai + bi * (ta - 25.0);
 
     // Thermal Gradient Compensation (TGC)
-    bcp = bcpee / (pow (2, biscale) * pow (2, 3 - ( (configreg >> 4) & 0x03)));
-    vircpoffsetcompensated = vcp - (acp + bcp * (ta - 25.0) );
-    virtgccompensated = viroffsetcompensated - ( (tgc / 32.0) *  vircpoffsetcompensated);
+    virtgccompensated = vir - viroffsetcompensated - ( (tgc / 32.0) *  vircpoffsetcompensated); //einmal offset für ta
 
     // Emissivity compensation
-    vircompensated = virtgccompensated / (epsilon / 32768);
+    vircompensated = virtgccompensated / (epsilon / 32768); //Ganzzahldivision
     
     // 7.3.3.2
     alpha = ( ( alpha0 / pow (2, alpha0scale) ) + ( deltaalpha / pow (2, deltaalphascale) ) ) / (float) pow (2, 3 - ( (configreg >> 4) & 0x03)) ;
     alphacomp = (1 + (ksta/pow (2, 20)) * (ta - 25.0)) * (alpha - tgc * alphacp);
 
-    // 7.3.3.1
-    ks4 = ks4ee / pow (2, ksscale + 8);
-  
-    // 7.3.3
-    tak4 = pow ( (ta + 273.15), 4);
     sx = ks4 * pow ( ( ( pow (alphacomp, 3) * vircompensated ) + ( pow  ( alphacomp, 4 ) * tak4 ) ), (1 / 4.0) );              // x. Wurzel aus y = y^(1/x)
     to = pow ( (vircompensated / ( alphacomp * (1 - ks4 * 273.15) + sx ) ) + tak4, (1 / 4.0) ) - 273.15;
 
