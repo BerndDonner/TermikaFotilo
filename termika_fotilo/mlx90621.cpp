@@ -35,34 +35,33 @@ uint8_t MLX90621::init (void)
  
   if (!read_eeprom()) 
     return 0;
-  write_trim (eepromMLX[0xF7]);                       // Trimwert im EEPROM-Inhalt Adresse 0xF7
-  write_config (eepromMLX[0xF5], eepromMLX[0xF6]);    // Normal mode (no sleep), I2C FM+ mode enabled, ADC low reference enabled 
+  write_trim (mem.eepromMLX[0xF7]);                       // Trimwert im EEPROM-Inhalt Adresse 0xF7
+  write_config (mem.eepromMLX[0xF5], mem.eepromMLX[0xF6]);    // Normal mode (no sleep), I2C FM+ mode enabled, ADC low reference enabled 
 
   configreg = read_config();
 
-  ta = get_ptat();      
+  float ta = get_ptat();      
   if (ta > 300 || ta < -20)      // out of bounds, wichtig zu pruefen
     return 0;
 
-  vcp = read_compensation();                                  // Compensation pixel 
-
-  acp = (int16_t)( eepromMLX[0xD4] << 8 ) | eepromMLX[0xD3];           // Compensation pixel individual offset coefficient
-  bcpee = (int8_t)eepromMLX[0xD5];                                      // Individual Ta dependence (slope) of the compensation pixel offset
-  tgc = (int8_t)eepromMLX[0xD8];                                      // Thermal gradient coefficient
-  aiscale = eepromMLX[0xD9] >> 4;                             // [7:4] – Scaling coeff for the IR pixels offset
-  biscale = eepromMLX[0xD9] & 0x0F;                           // [3:0] – Scaling coeff of the IR pixels offset Ta dependence
-  alpha0 = ( eepromMLX[0xE1] << 8 ) | eepromMLX[0xE0];        // Common sensitivity coefficient of IR pixels
-  alpha0scale = eepromMLX[0xE2];                              // Scaling coefficient for common sensitivity
-  deltaalphascale = eepromMLX[0xE3];                          // Scaling coefficient for individual sensitivity
-  alphacp = (( eepromMLX[0xD7] << 8 ) | eepromMLX[0xD6]) / (float) (pow (2, alpha0scale) * pow (2, 3 - ( (configreg >> 4) & 0x03)));       // Sensitivity coefficient of the compensation pixel
-  epsilon = ( eepromMLX[0xE5] << 8 ) | eepromMLX[0xE4] ;       // Emissivity
-  acommon = (int16_t)(( eepromMLX[0xD1] << 8 ) | eepromMLX[0xD0]);    // IR pixel common offset coefficient
-  ksta = (int16_t)(( eepromMLX[0xD7] << 8 ) | eepromMLX[0xD6]);   // KsTa (fixed scale coefficient = 20)
-  ks4ee = (int8_t)eepromMLX[0xC4];
-  ksscale = eepromMLX[0xC0];
+  int16_t  vcp = read_compensation();                                  // Compensation pixel 
+  int16_t  acp = (int16_t)( mem.eepromMLX[0xD4] << 8 ) | mem.eepromMLX[0xD3];           // Compensation pixel individual offset coefficient
+  int8_t   bcpee = (int8_t)mem.eepromMLX[0xD5];                                      // Individual Ta dependence (slope) of the compensation pixel offset
+  int8_t   tgc = (int8_t)mem.eepromMLX[0xD8];                                      // Thermal gradient coefficient
+  uint8_t  aiscale = mem.eepromMLX[0xD9] >> 4;                             // [7:4] – Scaling coeff for the IR pixels offset
+  uint8_t  biscale = mem.eepromMLX[0xD9] & 0x0F;                           // [3:0] – Scaling coeff of the IR pixels offset Ta dependence
+  uint16_t alpha0 = ( mem.eepromMLX[0xE1] << 8 ) | mem.eepromMLX[0xE0];        // Common sensitivity coefficient of IR pixels
+  uint8_t  alpha0scale = mem.eepromMLX[0xE2];                              // Scaling coefficient for common sensitivity
+  uint8_t  deltaalphascale = mem.eepromMLX[0xE3];                          // Scaling coefficient for individual sensitivity
+  float alphacp = (( mem.eepromMLX[0xD7] << 8 ) | mem.eepromMLX[0xD6]) / (float) (pow (2, alpha0scale) * pow (2, 3 - ( (configreg >> 4) & 0x03)));       // Sensitivity coefficient of the compensation pixel
+  epsilon = ( mem.eepromMLX[0xE5] << 8 ) | mem.eepromMLX[0xE4] ;       // Emissivity
+  int16_t acommon = (int16_t)(( mem.eepromMLX[0xD1] << 8 ) | mem.eepromMLX[0xD0]);    // IR pixel common offset coefficient
+  int16_t ksta = (int16_t)(( mem.eepromMLX[0xD7] << 8 ) | mem.eepromMLX[0xD6]);   // KsTa (fixed scale coefficient = 20)
+  int8_t ks4ee = (int8_t)mem.eepromMLX[0xC4];
+  uint8_t ksscale = mem.eepromMLX[0xC0];
 
   float bcp = bcpee / (pow (2, biscale) * pow (2, 3 - ( (configreg >> 4) & 0x03)));           //keine Arraygröße nur einmal berechnen!!!
-  vircpoffsetcompensated = vcp - (acp + bcp * (ta - 25.0) );                                  //einmal für ta berechnen!!
+  float vircpoffsetcompensated = vcp - (acp + bcp * (ta - 25.0) );                                  //einmal für ta berechnen!!
 
   // 7.3.3.1
   ks4 = ks4ee / pow (2, ksscale + 8); //nur einmal berechnen
@@ -70,6 +69,20 @@ uint8_t MLX90621::init (void)
   // 7.3.3
   tak4 = pow ( (ta + 273.15), 4);
 
+  for (uint8_t i = 0; i < 64; i++)
+  {
+    uint8_t deltaai = mem.eepromMLX[i]; //deltaai --> ai -->
+    float bi = (int8_t)mem.eepromMLX[0x40 + i];  //bi, ai --> bei gegebenen ta offset für vir 
+    uint8_t deltaalpha = mem.eepromMLX[0x80 + i]; //----> alpha, ta ---> alphacomp
+
+    float ai = (acommon + deltaai * pow (2, aiscale)) / pow (2, ( (configreg >> 4) & 0x03));      // Bit 5:4 Config Register
+    bi = bi / (pow (2, biscale) * pow (2, 3 - ( (configreg >> 4) & 0x03)));
+    viroffset[i] = ai + bi * (ta - 25.0) + ( (tgc / 32.0) *  vircpoffsetcompensated); //einmal offset für ta
+
+    // 7.3.3.2
+    float alpha = ( ( alpha0 / pow (2, alpha0scale) ) + ( deltaalpha / pow (2, deltaalphascale) ) ) / (float) pow (2, 3 - ( (configreg >> 4) & 0x03)) ;
+    alphacomp[i] = (1 + (ksta/pow (2, 20)) * (ta - 25.0)) * (alpha - tgc * alphacp);
+  }
   
   return 1;
 }
@@ -83,18 +96,6 @@ void MLX90621::read_all_irfield (float temperatures[16][4])
 {
   uint8_t x, y, i;
   int16_t vir;
-  uint8_t deltaai;               // IR pixel individual offset coefficient
-  int8_t bieeprom;
-  float bi;               // Individual Ta dependence (slope) of IR pixels offset
-  uint8_t deltaalpha;      // Individual sensitivity coefficient
-  float virtgccompensated;
-  float viroffsetcompensated;
-  float vircompensated;
-  float ai;
-  float alphacomp;
-  float alpha;
-  float sx;
-  float to;
   
   while (test_por ())
   {
@@ -108,36 +109,23 @@ void MLX90621::read_all_irfield (float temperatures[16][4])
     
   for (i = 0; i < 64; i++)
   {
-    vir = (int16_t)(irpixels[i * 2 + 1] << 8 | irpixels[i * 2]);      
-    deltaai = eepromMLX[i]; //deltaai --> ai -->
-    bi = (int8_t)eepromMLX[0x40 + i];  //bi, ai --> bei gegebenen ta offset für vir 
-    deltaalpha = eepromMLX[0x80 + i]; //----> alpha, ta ---> alphacomp
-
-    // 7.3.3.1 
-    // Offset compensation
-    ai = (acommon + deltaai * pow (2, aiscale)) / pow (2, ( (configreg >> 4) & 0x03));      // Bit 5:4 Config Register
-    bi = bi / (pow (2, biscale) * pow (2, 3 - ( (configreg >> 4) & 0x03)));
-    viroffsetcompensated = ai + bi * (ta - 25.0);
+    vir = (int16_t)(mem.irpixels[i * 2 + 1] << 8 | mem.irpixels[i * 2]);      
 
     // Thermal Gradient Compensation (TGC)
-    virtgccompensated = vir - viroffsetcompensated - ( (tgc / 32.0) *  vircpoffsetcompensated); //einmal offset für ta
-
-    // Emissivity compensation
-    vircompensated = virtgccompensated / (epsilon / 32768); //Ganzzahldivision
+    float virtgccompensated = vir - viroffset[i];
     
-    // 7.3.3.2
-    alpha = ( ( alpha0 / pow (2, alpha0scale) ) + ( deltaalpha / pow (2, deltaalphascale) ) ) / (float) pow (2, 3 - ( (configreg >> 4) & 0x03)) ;
-    alphacomp = (1 + (ksta/pow (2, 20)) * (ta - 25.0)) * (alpha - tgc * alphacp);
-
-    sx = ks4 * pow ( ( ( pow (alphacomp, 3) * vircompensated ) + ( pow  ( alphacomp, 4 ) * tak4 ) ), (1 / 4.0) );              // x. Wurzel aus y = y^(1/x)
-    to = pow ( (vircompensated / ( alphacomp * (1 - ks4 * 273.15) + sx ) ) + tak4, (1 / 4.0) ) - 273.15;
+    // Emissivity compensation
+    float vircompensated = virtgccompensated / (epsilon / 32768); //Ganzzahldivision
+    
+    float sx = ks4 * pow ( ( ( pow (alphacomp[i], 3) * vircompensated ) + ( pow  ( alphacomp[i], 4 ) * tak4 ) ), (1 / 4.0) );              // x. Wurzel aus y = y^(1/x)
+    float to = pow ( (vircompensated / ( alphacomp[i] * (1 - ks4 * 273.15) + sx ) ) + tak4, (1 / 4.0) ) - 273.15;
 
     temperatures[i%16][(uint8_t)i/16] = to;      // yeah, wir haben die reale Temperatur
   }
 }
 
 /**
-  @brief  Liest 256 Bytes aus dem EEPROM und speichert die Daten in eepromMLX
+  @brief  Liest 256 Bytes aus dem EEPROM und speichert die Daten in mem.eepromMLX
   @param  none
   @return none
 */
@@ -151,9 +139,9 @@ uint8_t MLX90621::read_eeprom (void)
     return 0;
 
   for (i = 0; i < (0xFF - 1); i++)                 // read all 0xFF bytes of the EEPROM
-    eepromMLX[i] = i2c_readAck();
+    mem.eepromMLX[i] = i2c_readAck();
 
-  eepromMLX[i] = i2c_readNak();
+  mem.eepromMLX[i] = i2c_readNak();
   i2c_stop();
 
   return 1;
@@ -196,7 +184,7 @@ void MLX90621::write_config (uint8_t lsb, uint8_t hsb)
   @param  none
   @return Config Register oder -1 wenn Fehler
 */
-int32_t MLX90621::read_config (void)
+int32_t MLX90621::read_config()
 {
   uint16_t configreg;
   
@@ -275,22 +263,22 @@ float MLX90621::get_ptat (void)
   
   exp2 = ( (configreg >> 4) & 0x03);      // Bit 5:4 Config Register
 
-  vth = ( eepromMLX[0xDB] << 8 ) | eepromMLX[0xDA];
+  vth = ( mem.eepromMLX[0xDB] << 8 ) | mem.eepromMLX[0xDA];
   if (vth > 32767)
     vth -= 65536;
   vth = vth / pow (2, 3-exp2);
 
-  kt1 = (( eepromMLX[0xDD] << 8 ) | eepromMLX[0xDC]);
+  kt1 = (( mem.eepromMLX[0xDD] << 8 ) | mem.eepromMLX[0xDC]);
   if (kt1 > 32767)
     kt1 -= 65536;
 
-  exp1 = ( eepromMLX[0xD2] >> 4);               // Bit 7:4
+  exp1 = ( mem.eepromMLX[0xD2] >> 4);               // Bit 7:4
   kt1 = kt1 / ( pow (2, exp1) * pow (2, 3-exp2) );
   
-  kt2 = (( eepromMLX[0xDF] << 8 ) | eepromMLX[0xDE]);
+  kt2 = (( mem.eepromMLX[0xDF] << 8 ) | mem.eepromMLX[0xDE]);
   if (kt2 > 32767)
     kt2 -= 65536;
-  exp1 = (eepromMLX[0xD2] & 0x0F);             // Bit 3:0
+  exp1 = (mem.eepromMLX[0xD2] & 0x0F);             // Bit 3:0
   kt2 = kt2 / ( pow (2, exp1+10) * pow (2, 3-exp2) );
   
   return (((kt1 * -1.0) + sqrt( kt1*kt1 - (4 * kt2) * (vth - ptat) )) / (2 * kt2) ) + 25.0;
@@ -343,19 +331,19 @@ uint8_t MLX90621::read_ir (void)
   {                                           //it would only be two loops iff the last read would not need a Not Acknowledge
     for (j = 0; j < 0x04; j++)                //basically transposing the array of words that is read as an array of bytes
     {
-      irpixels[(i + 0x10*j)*2]     = i2c_readAck();
-      irpixels[(i + 0x10*j)*2 + 1] = i2c_readAck();
+      mem.irpixels[(i + 0x10*j)*2]     = i2c_readAck();
+      mem.irpixels[(i + 0x10*j)*2 + 1] = i2c_readAck();
     }
   }
 
   for (j = 0; j < 0x04-1; j++)
   {
-    irpixels[(i + 0x10*j)*2]     = i2c_readAck();
-    irpixels[(i + 0x10*j)*2 + 1] = i2c_readAck();
+    mem.irpixels[(i + 0x10*j)*2]     = i2c_readAck();
+    mem.irpixels[(i + 0x10*j)*2 + 1] = i2c_readAck();
   }
 
-  irpixels[(i + 0x10*j)*2]     = i2c_readAck();
-  irpixels[(i + 0x10*j)*2 + 1] = i2c_readNak();
+  mem.irpixels[(i + 0x10*j)*2]     = i2c_readAck();
+  mem.irpixels[(i + 0x10*j)*2 + 1] = i2c_readNak();
 
   i2c_stop();
 

@@ -64,7 +64,7 @@ void loop()
     OutTempField();
     #ifdef PROFILING
       time_stop = micros();
-      Serial.print("PROFILING --- Laufzeit der Hauptschleife: ");
+      Serial.print(F("PROFILING --- Laufzeit der Hauptschleife: "));
       Serial.println(time_stop-time_start); //prints time since program started
     #endif
 
@@ -192,11 +192,10 @@ void OutAmbientTemp(void)
 void OutTempField(void)
 {
   int8_t x, y, xmod, xorg1, xorg2, ymod, yorg1, yorg2; //, xz, yz;
-  char puffer[10];
+  char puffer[10]; //DEBUG only
   float temps[16][4];
   float i, i1, i2;
   float hue;
-  uint8_t R, G, B;
   float interpoltemp;
   
   MLXtemp.read_all_irfield (temps);

@@ -2,38 +2,23 @@
 #ifndef __MLX90621__
 #define __MLX90621__
 
-// pruefe, ob wire.h angepasst wurde:
-
 class MLX90621
 {
   private:
-    uint8_t eeprom_dump_address = 0x50 << 1;
-    uint8_t chip_address = 0x60 << 1;
+    const PROGMEM uint8_t eeprom_dump_address = 0x50 << 1;
+    const PROGMEM uint8_t chip_address = 0x60 << 1;
     uint16_t configreg;
-    int16_t vcp;
-    int16_t acp;
-    int16_t acommon;
-    int16_t ksta;
-    int8_t bcpee;
-    float alphacp;
-    int8_t tgc;
-    uint8_t aiscale;
-    uint8_t biscale;
-    uint16_t alpha0;
-    uint8_t alpha0scale;
-    uint8_t deltaalphascale;
     uint16_t epsilon;
-    uint8_t irpixels[128];
-    float ta;
-    int8_t ks4ee;
-    uint8_t ksscale;
+    union {
+      uint8_t eepromMLX[256];     // die ersten 192 Bytes werden nur während der Initialisierung benötigt
+      uint8_t irpixels[128];
+    } mem;
+    float viroffset[64];
+    float alphacomp[64];
     float ks4;
-    uint64_t tak4;
-    float vircpoffsetcompensated;
+    float tak4;
 
 
-
-    uint8_t eepromMLX[256];     // Buffer
     uint8_t read_eeprom (void);
     void write_trim (uint8_t);
     void write_config (uint8_t, uint8_t);
