@@ -108,7 +108,7 @@ void StartScreen(void)
 
   TFTscreen.stroke (RGB(0xFF , 0xFF, 0xFF));
   TFTscreen.setTextSize (1);
-  TFTscreen.text ("TERMIKA FOTILO", 3, 7);
+  TFTscreen.text ("TERMIKA FOTILO", 3, 7);  //TODO: Store Strings in Flash: implement TFT.text for flash-mem saves 49bytes
 
   TFTscreen.stroke (RGB(0xFF, 0x50, 0x50));
   TFTscreen.setTextSize (1);
