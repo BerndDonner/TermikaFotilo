@@ -132,7 +132,7 @@ void StartScreen(void)
     for (uint8_t j = 0; j < 10; ++j)
     {
       uint8_t h_i = ((uint16_t)(i * 13)) >> 3; // 0x555 / 103dec = 13
-      uint16_t color = colormap[h_i];
+      uint16_t color = pgm_read_word(colormap + h_i); //colormap[h_i];
       SPI.transfer(color >> 8);
       SPI.transfer(color);
     }
@@ -225,7 +225,7 @@ void OutTempField(void)
     {
       hue = (MAXTEMP - temps[xi][yi]) / (float)(MAXTEMP - MINTEMP);
       uint8_t h_i = ((uint16_t)(hue * 0x555)) >> 3;
-      uint16_t color = colormap[h_i];
+      uint16_t color = pgm_read_word(colormap + h_i); //colormap[h_i];
       SPI.transfer(color >> 8);
       SPI.transfer(color);
     }
@@ -247,7 +247,7 @@ void OutTempField(void)
     {
       hue = (MAXTEMP - temps[xi][yi]) / (float)(MAXTEMP - MINTEMP);
       uint8_t h_i = ((uint16_t)(hue * 0x555)) >> 3;
-      uint16_t color = colormap[h_i];
+      uint16_t color = pgm_read_word(colormap + h_i); //colormap[h_i];
 
       for(uint8_t yd = 0; yd <  ZOOM; ++yd)
       {
@@ -290,7 +290,7 @@ void OutTempField(void)
 
           hue = (MAXTEMP - interpoltemp) / (float)(MAXTEMP - MINTEMP);
           uint8_t h_i = ((uint16_t)(hue * 0x555)) >> 3;
-          uint16_t color = colormap[h_i];
+          uint16_t color = pgm_read_word(colormap + h_i); //colormap[h_i];
           SPI.transfer(color >> 8);
           SPI.transfer(color);
         }

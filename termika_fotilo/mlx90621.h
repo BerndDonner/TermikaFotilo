@@ -10,7 +10,7 @@ class MLX90621
     uint16_t configreg;
     uint16_t epsilon;
     union {
-      uint8_t eepromMLX[256];     // die ersten 192 Bytes werden nur während der Initialisierung benötigt
+      uint8_t eepromMLX[256];     // die ersten 3*64 = 192 Bytes werden nur während der Initialisierung benötigt
       uint8_t irpixels[128];
     } mem;
     float viroffset[64];
