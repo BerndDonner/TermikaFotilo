@@ -21,6 +21,9 @@
 #include <TFT.h>
 #include "termika_fotilo.h"
 #include "mlx90621.h"
+#include "st7735/dis_st7735.h"
+#include "st7735/Fonts/font5x7fixed_mono.h"
+
 
 
 #define PROFILING

@@ -5,8 +5,8 @@
 class MLX90621
 {
   private:
-    const PROGMEM uint8_t eeprom_dump_address = 0x50 << 1;
-    const PROGMEM uint8_t chip_address = 0x60 << 1;
+    const uint8_t eeprom_dump_address = 0x50 << 1;
+    const uint8_t chip_address = 0x60 << 1;
     uint16_t configreg;
     uint16_t epsilon;
     union {

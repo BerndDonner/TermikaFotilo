@@ -59,13 +59,6 @@ ________________________________________________________________________________
 #include "utils.h"
 
 /*************************************************************
-	SYSTEM DEFINES
-**************************************************************/
-typedef uint8_t	bool;
-#define true	1
-#define false	0
-
-/*************************************************************
 	USER DEFINED SETTINGS
 **************************************************************/
 
@@ -925,10 +918,10 @@ void DIS_ST7735_fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t co
 	DIS_ST7735_setAddrWindow(x, y, w, h);
 
 	while(num_pixels--){
-		SPDR0 = color_high;
-		while(!(SPSR0 & (1 << SPIF0)));
-		SPDR0 = color_low;
-		while(!(SPSR0 & (1 << SPIF0)));
+		SPDR = color_high;
+		while(!(SPSR & (1 << SPIF0)));
+		SPDR = color_low;
+		while(!(SPSR & (1 << SPIF0)));
 	}
 	
 	SPI_endWrite();
@@ -1798,7 +1791,7 @@ uint8_t DIS_ST7735_readcommand8(uint8_t commandByte, int8_t index){
 	DIS_ST7735_writeCommand(commandByte);
 	
 	// Disable SPI so we can put the MOSI pin to high impedance 
-	SPCR0 &= ~(1 << SPE0);
+	SPCR &= ~(1 << SPE0);
 	
 	// Set SDA (MOSI) pin to hi-Z
 	SPI0_PORT &= ~(1 << SPI0_MOSI_PIN);
@@ -1839,7 +1832,7 @@ uint8_t DIS_ST7735_readcommand8(uint8_t commandByte, int8_t index){
 	SPI0_DDR |= (1 << SPI0_MOSI_PIN);
 	
 	// Enable the SPI
-	SPCR0 |= (1 << SPE0);
+	SPCR |= (1 << SPE0);
 	
 	return result;
 }
@@ -1953,8 +1946,8 @@ static void SPI_init(void){
 	SPI0_DDR |= (1 << SPI0_MOSI_PIN) | (1 << SPI0_SCK_PIN);
 	
 	// Enable SPI, Master, set clock rate fck/2
-	SPCR0 = (1 << SPE0) | (1 << MSTR0);
-	SPSR0 = (1 << 0); // set clock rate fck/2
+	SPCR = (1 << SPE0) | (1 << MSTR0);
+	SPSR = (1 << 0); // set clock rate fck/2
 }
 
 
@@ -1968,26 +1961,26 @@ static void SPI_init(void){
 static void SPI_transmit(uint32_t data, uint8_t data_size){	
 	switch(data_size){
 		case 8:
-			SPDR0 = (uint8_t)data;
-			while(!(SPSR0 & (1 << SPIF0)));
+			SPDR = (uint8_t)data;
+			while(!(SPSR & (1 << SPIF0)));
 		break;
 		
 		case 16:
-			SPDR0 = (uint8_t)(data >> 8);
-			while(!(SPSR0 & (1 << SPIF0)));
-			SPDR0 = (uint8_t)(data);
-			while(!(SPSR0 & (1 << SPIF0)));
+			SPDR = (uint8_t)(data >> 8);
+			while(!(SPSR & (1 << SPIF0)));
+			SPDR = (uint8_t)(data);
+			while(!(SPSR & (1 << SPIF0)));
 		break;
 		
 		case 32:
-			SPDR0 = (uint8_t)(data >> 24);
-			while(!(SPSR0 & (1 << SPIF0)));
-			SPDR0 = (uint8_t)(data >> 16);
-			while(!(SPSR0 & (1 << SPIF0)));
-			SPDR0 = (uint8_t)(data >> 8);
-			while(!(SPSR0 & (1 << SPIF0)));
-			SPDR0 = (uint8_t)(data);
-			while(!(SPSR0 & (1 << SPIF0)));
+			SPDR = (uint8_t)(data >> 24);
+			while(!(SPSR & (1 << SPIF0)));
+			SPDR = (uint8_t)(data >> 16);
+			while(!(SPSR & (1 << SPIF0)));
+			SPDR = (uint8_t)(data >> 8);
+			while(!(SPSR & (1 << SPIF0)));
+			SPDR = (uint8_t)(data);
+			while(!(SPSR & (1 << SPIF0)));
 	}
 }
 
