@@ -71,24 +71,24 @@ ________________________________________________________________________________
 #define SPI0_DDR								DDRB  // DDR for SPI pins
 #define SPI0_PINS								PINB  // Holds the state of each pin on port where SPI pins are
 
-#define SPI0_MOSI_PIN							PB5   // SDA pin
-#define SPI0_SCK_PIN							PB7   // SCK pin
+#define SPI0_MOSI_PIN							PB3   // SDA pin
+#define SPI0_SCK_PIN							PB5   // SCK pin
 
 // TFT RESET pin (optional - comment-out if not used)
 // If not used connect it to VCC
 #define TFT_RESET_DDR							DDRB
-#define TFT_RESET_PORT							PORTB
+#define TFT_RESET_PORT						PORTB
 #define TFT_RESET_PIN							PB0
 
 // TFT D/C (Data/Command) pin
-#define TFT_DC_DDR								DDRD
-#define TFT_DC_PORT								PORTD
-#define TFT_DC_PIN								PD7
+#define TFT_DC_DDR								DDRB
+#define TFT_DC_PORT								PORTB
+#define TFT_DC_PIN								PB1
 
 // TFT CS (Chip Select) - can be SPI SS or any other pin
-#define TFT_CS_DDR								DDRD
-#define TFT_CS_PORT								PORTD
-#define TFT_CS_PIN								PD6
+#define TFT_CS_DDR								DDRB
+#define TFT_CS_PORT								PORTB
+#define TFT_CS_PIN								PB2
 
 // TFT BL (Back Light) pin (optional - comment-out if not used)
 //#define TFT_BL_DDR							DDRx
@@ -96,17 +96,17 @@ ________________________________________________________________________________
 //#define TFT_BL_PIN							Pxn
 
 #define DISPLAY_WIDTH							128
-#define DISPLAY_HEIGHT							160
+#define DISPLAY_HEIGHT						160
 
 // Some display needs this offset during initialization
 // If a pixel written at 0,0 location is not at 0,0 set
 // x and y offsets to 0, 0 or 2, 1 depending on the display
-#define X_OFFSET								2 // default: 2
-#define Y_OFFSET								1 // default: 1
+#define X_OFFSET								0 // default: 2
+#define Y_OFFSET								0 // default: 1
 
 // RGB color filter panel - RGB or BGR (MADCTL)
 // If red is displayed as blue set this value as 0x00 otherwise 0x08
-#define ST7735_RGB_FILTER						0x00
+#define ST7735_RGB_FILTER						0x08
 
 
 // Some ready-made 16-bit ('565') color settings:
@@ -116,14 +116,14 @@ ________________________________________________________________________________
 // https://github.com/lgaland/rgb-converter
 #define ST77XX_BLACK					0x0000
 #define ST77XX_WHITE 					0xFFFF
-#define ST77XX_RED 						0xF800
+#define ST77XX_RED 					0xF800
 #define ST77XX_GREEN 					0x07E0
 #define ST77XX_BLUE 					0x001F
 #define ST77XX_CYAN 					0x07FF
 #define ST77XX_MAGENTA 					0xF81F
 #define ST77XX_YELLOW 					0xFFE0
 #define ST77XX_ORANGE 					0xFC00
-#define ST77XX_GREY						0x8410
+#define ST77XX_GREY					0x8410
 #define ST77XX_LIGHT_GREY				0xD69A
 #define ST77XX_DIM_GREY					0x6B4D
 
