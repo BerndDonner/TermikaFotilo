@@ -24,7 +24,7 @@ void setup()
 	DIS_ST7735_setCursor(5, DIS_ST7735_getLineHeight());
 	
 	// Draw this original string
-	DIS_ST7735_drawString("Hello");
+	DIS_ST7735_drawString(F("Ich komme aus dem\n Flashspeicher!!!"));
 	
 	// Move the cursor to the next line 5px from left
 	DIS_ST7735_gotoNextLine(5);
@@ -41,7 +41,7 @@ void loop()
 	while(1){
 		// Set cursor to the same position after each loop
 		// 5px from left and 3 text lines from top
-		DIS_ST7735_setCursor(5, DIS_ST7735_getLineHeight() * 3);
+		DIS_ST7735_setCursor(5, DIS_ST7735_getLineHeight() * 4);
 		
 		// fillRect() is used with the same color as the background
 		// to clear the previous number and draw a new one. Use a light color as yellow

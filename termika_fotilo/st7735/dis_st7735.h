@@ -62,6 +62,13 @@ ________________________________________________________________________________
 	USER DEFINED SETTINGS
 **************************************************************/
 
+// Arduino UNO setup:
+//SCL   -> SCK   -> PB5
+//SDA   -> MOSI  -> PB3
+//CS    -> SS    -> PB2
+//A0    -> (D/C) -> PB1
+//Reset ->       -> PB0
+
 // It is important that the SS pin is set as an output - low or high
 // otherwise the SPI won't work properly. E.g if the SS pin is PB4:
 // DDRB |= 1 << PB4;
@@ -354,7 +361,8 @@ static const uint8_t PROGMEM Icmd[] = {
 **************************************************************/
 void DIS_ST7735_displayInit(void);
 uint16_t DIS_ST7735_getStringOffset(void);
-uint16_t DIS_ST7735_drawString(const char *c);
+uint8_t DIS_ST7735_drawString(const char *c);
+uint8_t DIS_ST7735_drawString(const __FlashStringHelper *flash);
 uint8_t DIS_ST7735_drawChar(int16_t x, int16_t y, unsigned char c);
 void DIS_ST7735_drawInt(INT_SIZE number, int8_t nrOfDigits);
 void DIS_ST7735_drawFloat(float float_number, int8_t nrOfDigits, uint8_t nrOfDecimals);
@@ -514,22 +522,32 @@ uint16_t DIS_ST7735_getStringOffset(void){
 	
 	@param	c		The 8-bit characters
 *************************************************************************************************/
-uint16_t DIS_ST7735_drawString(const char *c){
-	while(*c > 0){
-		if(*c == '\n'){
-			c++;
-			DIS_ST7735_gotoNextLine(textLimitLeft);
-		}
-		
-		if(DIS_ST7735_drawChar(cursor_x, cursor_y, *c) == 1){
-			return 1;
-		}else{
-			c++;
-			string_offset++;
-		}
+uint8_t DIS_ST7735_drawString(const char *c)
+{
+	while(*c > 0)
+  {
+		if(*c == '\n') DIS_ST7735_gotoNextLine(textLimitLeft);
+		else if(DIS_ST7735_drawChar(cursor_x, cursor_y, *c) == 1) return 1;
+		c++;
+		string_offset++;
 	}
-	
 	return 0;
+}
+/************************************************************************************************
+	@brief	Draw a string of characters starting from the current cursor position.
+			It returns 1 if screen overflow or 0 otherwise.
+	
+	@param	c		The 8-bit characters
+*************************************************************************************************/
+uint8_t DIS_ST7735_drawString(const __FlashStringHelper *flash){
+  PGM_P p = reinterpret_cast<PGM_P>(flash);
+  while (1) {
+    unsigned char c = pgm_read_byte(p++);
+    if (c == 0) return 0;
+		if(c == '\n') DIS_ST7735_gotoNextLine(textLimitLeft);
+		else if(DIS_ST7735_drawChar(cursor_x, cursor_y, c) == 1) return 1;
+		string_offset++;
+	}	
 }
 
 
