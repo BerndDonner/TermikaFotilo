@@ -566,6 +566,7 @@ uint8_t DIS_ST7735_drawChar(int16_t x, int16_t y, unsigned char c){
 	uint8_t last = pgm_read_byte(&gfxFont->last);
 	
 	// Char present in this font?
+
 	if(!((c >= first) && (c <= last))) c = '_';
 	
 	// Adapt ASCII number to array index

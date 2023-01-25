@@ -110,6 +110,25 @@ void setup()
   uint8_t i = 25 + (uint8_t)(MAXTEMP / gradstep);
   DIS_ST7735_drawHLine(145, i, 5, ST77XX_WHITE);
 
+
+  _delay_ms(5000);
+
+
+	DIS_ST7735_fillRect(0, 112, 71, 17, ST77XX_BLACK); // Alte Zahl loeschen  ST77XX_YELLOW
+
+	DIS_ST7735_setFontColor(ST77XX_YELLOW);
+  DIS_ST7735_setFontSize(2, 2);
+	DIS_ST7735_setCursor(0, 112);
+
+  dtostrf (gradstep*111, 6, 1, puffer); //<---- replace gradstep by t!!!
+  DIS_ST7735_drawString(puffer);
+
+  DIS_ST7735_setFontSize(1, 1);
+	DIS_ST7735_setCursor(74, 112);
+  DIS_ST7735_drawChar(74, 112, '\xF8'); // "°C" ASCII 0xF8 fuer Gradzeichen
+	DIS_ST7735_setCursor(80, 112);
+  DIS_ST7735_drawChar(80, 112, 'C'); 
+
 /*
 	// Init function
 	DIS_ST7735_displayInit();
