@@ -48,8 +48,8 @@ void setup()
 	DIS_ST7735_displayInit();
   DIS_ST7735_setRotation(ROTATE_DEGREE_270);
 	DIS_ST7735_fillScreen(ST77XX_BLACK);
-	DIS_ST7735_fillRect(0, 0, 159, 20, 0x1326);
-	DIS_ST7735_drawRect(0, 0, 159, 20, ST77XX_YELLOW);
+	DIS_ST7735_fillRect(0, 0, 160, 21, 0x1326);
+	DIS_ST7735_drawRect(0, 0, 160, 21, ST77XX_YELLOW);
 
 	DIS_ST7735_setFont(&classicGFXfont);
 	DIS_ST7735_setFontColor(ST77XX_RED);
@@ -68,15 +68,15 @@ void setup()
 	DIS_ST7735_setCursor(0, 120);
   DIS_ST7735_drawString(F("Please wait"));
 
-	DIS_ST7735_fillRect(0, 27, 16+2, 4+2, 0x000c);
-	DIS_ST7735_drawRect(0, 27, 16+2, 4+2, 0x7bef);
-	DIS_ST7735_fillRect(0, 40, 16*ZOOM+2, 4*ZOOM+2, 0x000c);
-	DIS_ST7735_drawRect(0, 40, 16*ZOOM+2, 4*ZOOM+2, 0x7bef);
-	DIS_ST7735_fillRect(0, 75, 15*ZOOM+2, 3*ZOOM+2, 0x000c);
-	DIS_ST7735_drawRect(0, 75, 15*ZOOM+2, 3*ZOOM+2, 0x7bef);
+	DIS_ST7735_fillRect(0, 27, 16+3, 4+3, 0x000c);
+	DIS_ST7735_drawRect(0, 27, 16+3, 4+3, 0x7bef);
+	DIS_ST7735_fillRect(0, 40, 16*ZOOM+3, 4*ZOOM+3, 0x000c);
+	DIS_ST7735_drawRect(0, 40, 16*ZOOM+3, 4*ZOOM+3, 0x7bef);
+	DIS_ST7735_fillRect(0, 75, 15*ZOOM+3, 3*ZOOM+3, 0x000c);
+	DIS_ST7735_drawRect(0, 75, 15*ZOOM+3, 3*ZOOM+3, 0x7bef);
 
 	SPI_startWrite();
-  DIS_ST7735_setAddrWindow(150, 25, 9, 102);
+  DIS_ST7735_setAddrWindow(150, 25, 10, 103);
   for (uint8_t i=0; i < 103; i++)                 // 103 Farb-Schritte werden angezeigt
   {
     for (uint8_t j = 0; j < 10; ++j)
