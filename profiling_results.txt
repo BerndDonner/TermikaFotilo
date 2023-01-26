@@ -101,3 +101,12 @@ PROFILING --- Laufzeit der Hauptschleife: 432536
 PROFILING --- Laufzeit der Hauptschleife: 432480
 PROFILING --- Laufzeit der Hauptschleife: 432476
 PROFILING --- Laufzeit der Hauptschleife: 432488
+
+Neue SPI-Bus Bibliothek
+
+PROFILING --- Laufzeit der Hauptschleife: 387752
+PROFILING --- Laufzeit der Hauptschleife: 387732
+PROFILING --- Laufzeit der Hauptschleife: 387728
+PROFILING --- Laufzeit der Hauptschleife: 387628
+PROFILING --- Laufzeit der Hauptschleife: 387640
+PROFILING --- Laufzeit der Hauptschleife: 387468
