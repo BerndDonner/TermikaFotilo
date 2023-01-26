@@ -16,28 +16,17 @@
  * Zwei Warning-Ausgaben beim Kompilieren sind normal, weil die SD-Karte auf dem Display nicht genutzt wird
  * 
  */
- 
-#include <SPI.h>
-#include <TFT.h>
+
 #include "termika_fotilo.h"
 #include "mlx90621.h"
 #include "st7735/dis_st7735.h"
-#include "st7735/Fonts/font5x7fixed_mono.h"
+#include "st7735/fonts/classicGFXfont.h"
+
 
 
 
 #define PROFILING
-#define RGB(r, g, b)   r, g, b
 
-SPISettings spisettings = SPISettings(4000000L, MSBFIRST, SPI_MODE0);
-volatile uint8_t *rsport;
-uint8_t           rspinmask;
-volatile uint8_t *csport;
-uint8_t           cspinmask;
-
-
-
-TFT TFTscreen = TFT(CS_, DC_, RST_);    // TFT Konstruktor
 MLX90621 MLXtemp;                       // Objekt fuer Tempsensor erzeugen
 
 void setup() {}     // Arduino Schwachsinn
@@ -48,10 +37,6 @@ void loop()
     unsigned long time_start, time_stop;
     Serial.begin(38400);
   #endif
-  rsport    = portOutputRegister(digitalPinToPort(DC_));
-  rspinmask = digitalPinToBitMask(DC_);
-  csport    = portOutputRegister(digitalPinToPort(CS_));
-  cspinmask = digitalPinToBitMask(CS_);
 
   initWeight();  
   StartScreen();
@@ -93,70 +78,72 @@ void initWeight()
 */
 void StartScreen(void)
 {
-  uint8_t i;
-  uint8_t R, G, B;
-  float gradstep;
   char puffer[10];
-  
-  TFTscreen.begin ();    // Init Display
-  TFTscreen.background (RGB(0, 0, 0));
 
-  TFTscreen.stroke (RGB(0xFF, 0xFF, 0));
-  TFTscreen.fill (RGB(20, 100, 50));    
-  TFTscreen.rect (0, 0, 159, 20);          // Titelkasten
+	DIS_ST7735_displayInit();
+  DIS_ST7735_setRotation(ROTATE_DEGREE_270);
+	DIS_ST7735_fillScreen(ST77XX_BLACK);
+	DIS_ST7735_fillRect(0, 0, 160, 21, 0x1326);
+	DIS_ST7735_drawRect(0, 0, 160, 21, ST77XX_YELLOW);
 
-  TFTscreen.stroke (RGB(0xFF, 0, 0)); 
-  TFTscreen.setTextSize (2);
-  TFTscreen.text ("Make:", 100, 3);     // 5x7 Font x2
+	DIS_ST7735_setFont(&classicGFXfont);
+	DIS_ST7735_setFontColor(ST77XX_RED);
+  DIS_ST7735_setFontSize(2, 2);
+	DIS_ST7735_setCursor(100, 3);
+  DIS_ST7735_drawString(F("Make:"));
 
-  TFTscreen.stroke (RGB(0xFF , 0xFF, 0xFF));
-  TFTscreen.setTextSize (1);
-  TFTscreen.text ("TERMIKA FOTILO", 3, 7);  //TODO: Store Strings in Flash: implement TFT.text for flash-mem saves 49bytes
+	DIS_ST7735_setFontColor(ST77XX_WHITE);
+  DIS_ST7735_setFontSize(1, 1);
+	DIS_ST7735_setCursor(3, 7);
+  DIS_ST7735_drawString(F("TERMIKA FOTILO"));
 
-  TFTscreen.stroke (RGB(0xFF, 0x50, 0x50));
-  TFTscreen.setTextSize (1);
-  TFTscreen.text ("Init...", 0, 112);
-  TFTscreen.text ("Please wait", 0, 120);
+	DIS_ST7735_setFontColor(0xfa8a);
+	DIS_ST7735_setCursor(0, 112);
+  DIS_ST7735_drawString(F("Init..."));
+	DIS_ST7735_setCursor(0, 120);
+  DIS_ST7735_drawString(F("Please wait"));
 
+	DIS_ST7735_fillRect(0, 27, 16+3, 4+3, 0x000c);
+	DIS_ST7735_drawRect(0, 27, 16+3, 4+3, 0x7bef);
+	DIS_ST7735_fillRect(0, 40, 16*ZOOM+3, 4*ZOOM+3, 0x000c);
+	DIS_ST7735_drawRect(0, 40, 16*ZOOM+3, 4*ZOOM+3, 0x7bef);
+	DIS_ST7735_fillRect(0, 75, 15*ZOOM+3, 3*ZOOM+3, 0x000c);
+	DIS_ST7735_drawRect(0, 75, 15*ZOOM+3, 3*ZOOM+3, 0x7bef);
 
-  TFTscreen.stroke (RGB(127, 127, 127));
-  TFTscreen.fill (RGB(0, 0, 100));       
-  TFTscreen.rect (0, 27, 16+2, 4+2);                    // Original Daten
-  TFTscreen.rect (0, 40, 16*ZOOM+2, 4*ZOOM+2);          // Daten xZOOM
-  TFTscreen.rect (0, 75, 15*ZOOM+2, 3*ZOOM+2);      // Daten xZOOM interpoliert
-
-  TFTscreen.setAddrWindow(150, 0+25, 159, 102+25);
-  SPI.beginTransaction(spisettings);
-  *rsport |=  rspinmask;
-  *csport &= ~cspinmask;
-
-  for (i=0; i < 103; i++)                 // 103 Farb-Schritte werden angezeigt
+	SPI_startWrite();
+  DIS_ST7735_setAddrWindow(150, 25, 10, 103);
+  for (uint8_t i=0; i < 103; i++)                 // 103 Farb-Schritte werden angezeigt
   {
     for (uint8_t j = 0; j < 10; ++j)
     {
       uint8_t h_i = ((uint16_t)(i * 13)) >> 3; // 0x555 / 103dec = 13
       uint16_t color = pgm_read_word(colormap + h_i); //colormap[h_i];
-      SPI.transfer(color >> 8);
-      SPI.transfer(color);
+      uint8_t color_high = color >> 8, color_low = color;
+      
+      SPDR = color_high;
+		  while(!(SPSR & (1 << SPIF0)));
+		  SPDR = color_low;
+		  while(!(SPSR & (1 << SPIF0)));
     }
   }
 
-  *csport |= cspinmask;
-  SPI.endTransaction();
-  TFTscreen.stroke (RGB(0xFF , 0xFF, 0xFF)); 
-  TFTscreen.setTextSize (1);
-  
+	SPI_endWrite();
+
+	DIS_ST7735_setFontColor(ST77XX_WHITE);
+  DIS_ST7735_setFontSize(1, 1);
+
   itoa (MINTEMP, puffer, 10);
-  TFTscreen.text (puffer, 130, 120);
-  
+	DIS_ST7735_setCursor(130, 120);
+  DIS_ST7735_drawString(puffer);
+
   itoa (MAXTEMP, puffer, 10);
-  TFTscreen.text (puffer, 130, 25);        // => 150+20 = 170 Grad-Schritte umfasst der Farbbalken => bei 102 Farb-Schritte = 170/103 = 1,65 °C/Farb-Schritt
+	DIS_ST7735_setCursor(130, 25);
+  DIS_ST7735_drawString(puffer);
 
   // Zero degree line
-  gradstep = (MAXTEMP + abs(MINTEMP)) / 103.0;      // Absoultwert von Min
-  i = 25 + (uint8_t)(MAXTEMP / gradstep);
-  TFTscreen.line (145, i, 150, i);
-
+  float gradstep = (MAXTEMP + abs(MINTEMP)) / 103.0;      // Absoultwert von Min
+  uint8_t i = 25 + (uint8_t)(MAXTEMP / gradstep);
+  DIS_ST7735_drawHLine(145, i, 5, ST77XX_WHITE);
 }
 
 /**
@@ -171,19 +158,20 @@ void OutAmbientTemp(void)
 
  // Serial.println (t);
 
-  TFTscreen.stroke (RGB(0, 0, 0));
-  TFTscreen.fill (RGB(0, 0, 0));
-  TFTscreen.rect (0, 112, 70, 128-112);          // Alte Zahl loeschen
+	DIS_ST7735_fillRect(0, 112, 71, 17, ST77XX_BLACK); // Alte Zahl loeschen  ST77XX_YELLOW
 
-  TFTscreen.stroke (RGB(0xFF, 0xFF, 0)); 
-  TFTscreen.setTextSize (2);
+	DIS_ST7735_setFontColor(ST77XX_YELLOW);
+  DIS_ST7735_setFontSize(2, 2);
+	DIS_ST7735_setCursor(0, 112);
 
   dtostrf (t, 6, 1, puffer);
-  TFTscreen.text (puffer, 0, 112);     // 5x7 Font x2
-  TFTscreen.setTextSize (1);
-  TFTscreen.text ("\xF7", 74, 112);     // "°C" ASCII 0xF7 fuer Gradzeichen
-  TFTscreen.text ("C", 80, 112);    
-  
+  DIS_ST7735_drawString(puffer);
+
+  DIS_ST7735_setFontSize(1, 1);
+	DIS_ST7735_setCursor(74, 112);
+  DIS_ST7735_drawChar(74, 112, '\xF8'); // "°C" ASCII 0xF8 fuer Gradzeichen
+	DIS_ST7735_setCursor(80, 112);
+  DIS_ST7735_drawChar(80, 112, 'C');  
 }
 
 
@@ -216,11 +204,8 @@ void OutTempField(void)
 
 
   // Ausgabe des Temperaturfeldes auf Display
-  TFTscreen.setAddrWindow(1, 28, 16, 31);
-  SPI.beginTransaction(spisettings);
-     
-  *rsport |=  rspinmask;
-  *csport &= ~cspinmask;
+	SPI_startWrite();
+  DIS_ST7735_setAddrWindow(1, 28, 16, 4);
 
   for (uint8_t yi = 0; yi < 4; ++yi)
   {
@@ -229,22 +214,22 @@ void OutTempField(void)
       hue = (MAXTEMP - temps[xi][yi]) / (float)(MAXTEMP - MINTEMP);
       uint8_t h_i = ((uint16_t)(hue * 0x555)) >> 3;
       uint16_t color = pgm_read_word(colormap + h_i); //colormap[h_i];
-      SPI.transfer(color >> 8);
-      SPI.transfer(color);
+      uint8_t color_high = color >> 8, color_low = color;
+      
+      SPDR = color_high;
+		  while(!(SPSR & (1 << SPIF0)));
+		  SPDR = color_low;
+		  while(!(SPSR & (1 << SPIF0)));
     }
   }
-  *csport |= cspinmask;
-  SPI.endTransaction();
+	SPI_endWrite();
 
 
+	SPI_startWrite();
   // Ausgabe des Temperaturfeldes auf Display
   for (uint8_t xi = 0; xi < 16; ++xi)       
   {
-    TFTscreen.setAddrWindow(xi*ZOOM + 1, 0*ZOOM + 41, (xi+1)*ZOOM, 4*ZOOM + 40);
-    SPI.beginTransaction(spisettings);
-      
-    *rsport |=  rspinmask;
-    *csport &= ~cspinmask;
+    DIS_ST7735_setAddrWindow(xi*ZOOM + 1, 0*ZOOM + 41, ZOOM, 4*ZOOM);
 
     for (uint8_t yi = 0; yi < 4; ++yi)
     {
@@ -256,30 +241,29 @@ void OutTempField(void)
       {
         for(uint8_t xd = 0; xd < ZOOM; ++xd)
         {          
-          SPI.transfer(color >> 8);
-          SPI.transfer(color);
+          uint8_t color_high = color >> 8, color_low = color;
+      
+          SPDR = color_high;
+	    	  while(!(SPSR & (1 << SPIF0)));
+	    	  SPDR = color_low;
+		      while(!(SPSR & (1 << SPIF0)));
         }
       }
 //      dtostrf (temps[xi][yi], 6, 1, puffer);    // Ausgabe Zahlenwerte
 //      Serial.print (puffer);
     }
 //    Serial.println();
-    *csport |= cspinmask;
-    SPI.endTransaction();
   }
 //    Serial.println("***");
+  SPI_endWrite();
 
 
 
+	SPI_startWrite();
   // Bilineare Interpolation mit Tabelle
   for(uint8_t xi = 0; xi < 16-1; ++xi)
   {
-    TFTscreen.setAddrWindow(xi*ZOOM + 1, 0*ZOOM + 75 + 1, (xi+1)*ZOOM, 3*ZOOM + 75);
-    SPI.beginTransaction(spisettings);
-      
-    *rsport |=  rspinmask;
-    *csport &= ~cspinmask;
-
+    DIS_ST7735_setAddrWindow(xi*ZOOM + 1, 0*ZOOM + 75 + 1, ZOOM, 3*ZOOM);
     for(uint8_t yi = 0; yi <  4-1; ++yi)
     {
       for(uint8_t yd = 0; yd <  ZOOM; ++yd)
@@ -294,12 +278,15 @@ void OutTempField(void)
           hue = (MAXTEMP - interpoltemp) / (float)(MAXTEMP - MINTEMP);
           uint8_t h_i = ((uint16_t)(hue * 0x555)) >> 3;
           uint16_t color = pgm_read_word(colormap + h_i); //colormap[h_i];
-          SPI.transfer(color >> 8);
-          SPI.transfer(color);
+          uint8_t color_high = color >> 8, color_low = color;
+      
+          SPDR = color_high;
+		      while(!(SPSR & (1 << SPIF0)));
+		      SPDR = color_low;
+		      while(!(SPSR & (1 << SPIF0)));
         }
       }
     }
-    *csport |= cspinmask;
-    SPI.endTransaction();
   }
+  SPI_endWrite();
 }
