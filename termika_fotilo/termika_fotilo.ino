@@ -186,7 +186,6 @@ void OutTempField(void)
   int16_t temps[16][4];
   int16_t interpoltemp;
 
-  MLXtemp.read_all_irfield(temps); //TODO: temps float -> to fixed point int16_t/unit16_t?
 
   // Ausgabe des Temperaturfeldes auf Display
   SPI_startWrite();
@@ -196,7 +195,7 @@ void OutTempField(void)
   {
     for (uint8_t xi = 0; xi < 16; ++xi)
     {
-      uint8_t h_i = (((MAXTEMP - temps[xi][yi]) * 0x555) / (MAXTEMP - MINTEMP)) >> 3;
+      uint8_t h_i = (((int32_t)(MAXTEMP - temps[xi][yi])) * 0x555) / (MAXTEMP - MINTEMP) >> 3;
       uint16_t color = pgm_read_word(colormap + h_i);  //colormap[h_i];
       uint8_t color_high = color >> 8, color_low = color;
 
@@ -204,8 +203,13 @@ void OutTempField(void)
       while (!(SPSR & (1 << SPIF0)));
       SPDR = color_low;
       while (!(SPSR & (1 << SPIF0)));
+//      sprintf (puffer, "%d   ", color);    // Ausgabe Zahlenwerte
+//      Serial.print (puffer);
+ 
     }
-  }
+//    Serial.println();
+ }
+// Serial.println("Ende Farbe ***");
 
 
   // Ausgabe des Temperaturfeldes auf Display
@@ -215,7 +219,7 @@ void OutTempField(void)
 
     for (uint8_t yi = 0; yi < 4; ++yi)
     {
-      uint8_t h_i = (((MAXTEMP - temps[xi][yi]) * 0x555) / (MAXTEMP - MINTEMP)) >> 3;
+      uint8_t h_i = (((int32_t)(MAXTEMP - temps[xi][yi])) * 0x555) / (MAXTEMP - MINTEMP) >> 3;
       uint16_t color = pgm_read_word(colormap + h_i);  //colormap[h_i];
 
       for (uint8_t yd = 0; yd < ZOOM; ++yd)
@@ -230,12 +234,12 @@ void OutTempField(void)
           while (!(SPSR & (1 << SPIF0)));
         }
       }
-      //      dtostrf (temps[xi][yi], 6, 1, puffer);    // Ausgabe Zahlenwerte
-      //      Serial.print (puffer);
+//      sprintf (puffer, "%d   ", temps[xi][yi]);    // Ausgabe Zahlenwerte
+//      Serial.print (puffer);
     }
-    //    Serial.println();
+//    Serial.println();
   }
-  //    Serial.println("***");
+//  Serial.println("Ende Temperaturen ***");
 
 
   // Bilineare Interpolation mit Tabelle
@@ -250,7 +254,7 @@ void OutTempField(void)
         {
           interpoltemp = ((int32_t) temps[xi][yi] * Weight[xd][yd] + (int32_t) temps[xi + 1][yi] * Weight[ZOOM - xd][yd] + (int32_t) temps[xi][yi + 1] * Weight[xd][ZOOM - yd] + (int32_t) temps[xi + 1][yi + 1] * Weight[ZOOM - xd][ZOOM - yd]) >> 7;
 
-          uint8_t h_i = (((MAXTEMP - interpoltemp) * 0x555) / (MAXTEMP - MINTEMP)) >> 3;
+          uint8_t h_i = (((int32_t)(MAXTEMP - interpoltemp)) * 0x555) / (MAXTEMP - MINTEMP) >> 3;
           uint16_t color = pgm_read_word(colormap + h_i);  //colormap[h_i];
           uint8_t color_high = color >> 8, color_low = color;
 

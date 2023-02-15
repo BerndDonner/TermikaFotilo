@@ -94,9 +94,6 @@ uint8_t MLX90621::init (void)
 */
 void MLX90621::read_all_irfield (int16_t temperatures[16][4]) 
 {
-  uint8_t x, y, i;
-  int16_t* vir;
-  
   while (test_por ())
   {
     delay (10);
@@ -107,9 +104,9 @@ void MLX90621::read_all_irfield (int16_t temperatures[16][4])
    if (!read_ir ())
      return;
     
-  for (i = 0; i < 64; i++)
+  for (uint8_t i = 0; i < 64; i++)
   {
-    vir = (int16_t *)(&mem.irpixels[i * 2]);      
+    int16_t* vir = (int16_t *)(&mem.irpixels[i * 2]);      
 
     // Thermal Gradient Compensation (TGC)
     float tmp = (*vir) - viroffset[i];
@@ -121,7 +118,8 @@ void MLX90621::read_all_irfield (int16_t temperatures[16][4])
     float to = pow ( (vircompensated / ( alphacomp[i] * (1 - ks4 * 273.15) + sx ) ) + tak4, (1 / 4.0) ) - 273.15;
 
     // Reihe umkehren, da Sensor nach vorne und Display nach hinten => Temperatur-Feld so wie, auf Display zu zeigen
-    temperatures[15 - (i%16)][(uint8_t)i/16] = (int16_t) (to * 128);      // yeah, wir haben die reale Temperatur
+    temperatures[15 - (i%16)][(uint8_t)i/16] = (int16_t) (to * 128.0);      // yeah, wir haben die reale Temperatur
+//    temperatures[15 - (i%16)][(uint8_t)i/16] = 0xFFFF;      // yeah, wir haben die reale Temperatur
   }
 }
 
