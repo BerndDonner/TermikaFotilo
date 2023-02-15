@@ -186,7 +186,8 @@ void OutTempField(void)
   int16_t temps[16][4];
   int16_t interpoltemp;
 
-
+  MLXtemp.read_all_irfield(temps);
+  
   // Ausgabe des Temperaturfeldes auf Display
   SPI_startWrite();
   DIS_ST7735_setAddrWindow(1, 28, 16, 4);
