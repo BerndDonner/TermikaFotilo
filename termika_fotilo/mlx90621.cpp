@@ -249,7 +249,7 @@ float MLX90621::get_ptat (void)
 {
   uint8_t exp1, exp2_3;
   int16_t *vth_i, *kt1_i, *kt2_i;
-  float kt1, kt2, vth, tmp;
+  float kt1, kt2, vth;
   int32_t ptat;
   
   
