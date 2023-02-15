@@ -110,3 +110,11 @@ PROFILING --- Laufzeit der Hauptschleife: 387728
 PROFILING --- Laufzeit der Hauptschleife: 387628
 PROFILING --- Laufzeit der Hauptschleife: 387640
 PROFILING --- Laufzeit der Hauptschleife: 387468
+
+Aufräumen in get_ptat
+
+PROFILING --- Laufzeit der Hauptschleife: 385180
+PROFILING --- Laufzeit der Hauptschleife: 385336
+PROFILING --- Laufzeit der Hauptschleife: 385344
+PROFILING --- Laufzeit der Hauptschleife: 384960
+PROFILING --- Laufzeit der Hauptschleife: 384960

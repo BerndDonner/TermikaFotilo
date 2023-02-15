@@ -249,7 +249,7 @@ float MLX90621::get_ptat (void)
 {
   uint8_t exp1, exp2_3;
   int16_t *vth_i, *kt1_i, *kt2_i;
-  float kt1, kt2, vth, vth2, kt12, kt22, tmp;
+  float kt1, kt2, vth, tmp;
   int32_t ptat;
   
   
@@ -264,35 +264,23 @@ float MLX90621::get_ptat (void)
   
   exp2_3 = 3 - ( (configreg >> 4) & 0x03);      // 3 - Bit 5:4 Config Register
 
+  ptat = ptat << exp2_3;    //ptat = ptat*pow(2, exp2_3)
+
   vth_i = (int16_t*) &mem.eepromMLX[0xDA];
-  vth2 = (*vth_i);
-
-  vth = ( mem.eepromMLX[0xDB] << 8 ) | mem.eepromMLX[0xDA];
-  if (vth > 32767) vth -= 65536; //Zweierkomplement!
-  if (vth2 != vth) Serial.println("ERROR!!!");
-
-  vth = vth / pow (2, exp2_3);
-
-  kt1_i = (int16_t*) &mem.eepromMLX[0xDC];
-  kt12 = (*kt1_i);
-
-  kt1 = (( mem.eepromMLX[0xDD] << 8 ) | mem.eepromMLX[0xDC]);
-  if (kt1 > 32767) kt1 -= 65536;
-  if (kt12 != kt1) Serial.println("ERROR!!!");
+  vth = (*vth_i);
+  vth = vth;
 
   exp1 = ( mem.eepromMLX[0xD2] >> 4);               // Bit 7:4
 
-  kt1 = kt1 / pow (2, exp1 + exp2_3);
-  
-  kt2_i = (int16_t*) &mem.eepromMLX[0xDE];
-  kt22 = (*kt2_i);
-
-  kt2 = (( mem.eepromMLX[0xDF] << 8 ) | mem.eepromMLX[0xDE]);
-  if (kt2 > 32767) kt2 -= 65536;
-  if (kt22 != kt2) Serial.println("ERROR!!!");
+  kt1_i = (int16_t*) &mem.eepromMLX[0xDC];
+  kt1 = (*kt1_i);
+  kt1 = kt1 / pow (2, exp1);
 
   exp1 = (mem.eepromMLX[0xD2] & 0x0F);             // Bit 3:0
-  kt2 = kt2 / pow (2, exp1 + exp2_3 + 10);
+  
+  kt2_i = (int16_t*) &mem.eepromMLX[0xDE];
+  kt2 = (*kt2_i);
+  kt2 = kt2 / pow (2, exp1 + 10);
   
   return (((kt1 * -1.0) + sqrt( kt1*kt1 - (4 * kt2) * (vth - ptat) )) / (2 * kt2) ) + 25.0;
 }
