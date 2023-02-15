@@ -64,7 +64,7 @@ void initWeight()
   {
     for (int j = 0; j <= ZOOM; ++j)
     {
-      Weight[i][j] = (ZOOM - i) * (ZOOM - j) / (float)(ZOOM * ZOOM);
+      Weight[i][j] = (((ZOOM - i) * (ZOOM - j)) << 7) / (ZOOM * ZOOM);
     }
   }
 }
@@ -131,11 +131,11 @@ void StartScreen(void)
   DIS_ST7735_setFontColor(ST77XX_WHITE);
   DIS_ST7735_setFontSize(1, 1);
 
-  itoa(MINTEMP, puffer, 10);
+  itoa(MINTEMP >> 7, puffer, 10);
   DIS_ST7735_setCursor(130, 120);
   DIS_ST7735_drawString(puffer);
 
-  itoa(MAXTEMP, puffer, 10);
+  itoa(MAXTEMP >> 7, puffer, 10);
   DIS_ST7735_setCursor(130, 25);
   DIS_ST7735_drawString(puffer);
 
@@ -183,24 +183,10 @@ void OutTempField(void)
 {
   int8_t x, y, xmod, xorg1, xorg2, ymod, yorg1, yorg2;  //, xz, yz;
   char puffer[10];                                      //DEBUG only
-  float temps[16][4];
-  float i, i1, i2;
-  float hue;
-  float interpoltemp;
+  int16_t temps[16][4];
+  int16_t interpoltemp;
 
   MLXtemp.read_all_irfield(temps); //TODO: temps float -> to fixed point int16_t/unit16_t?
-
-  // Reihe umkehren, da Sensor nach vorne und Display nach hinten => Temperatur-Feld so wie, auf Display zu zeigen
-  for (y = 0; y < 4; y++)    //TODO: Remove this nonesense: read_all_irfield should return the temerature field in the correct order
-  {                            
-    for (x = 0; x < 8; x++)
-    {
-      i = temps[15 - x][y];  // Wert von rechts retten
-      temps[15 - x][y] = temps[x][y];
-      temps[x][y] = i;
-    }
-  }
-
 
   // Ausgabe des Temperaturfeldes auf Display
   SPI_startWrite();
@@ -210,8 +196,7 @@ void OutTempField(void)
   {
     for (uint8_t xi = 0; xi < 16; ++xi)
     {
-      hue = (MAXTEMP - temps[xi][yi]) / (float)(MAXTEMP - MINTEMP);
-      uint8_t h_i = ((uint16_t)(hue * 0x555)) >> 3;
+      uint8_t h_i = (((MAXTEMP - temps[xi][yi]) * 0x555) / (MAXTEMP - MINTEMP)) >> 3;
       uint16_t color = pgm_read_word(colormap + h_i);  //colormap[h_i];
       uint8_t color_high = color >> 8, color_low = color;
 
@@ -221,10 +206,8 @@ void OutTempField(void)
       while (!(SPSR & (1 << SPIF0)));
     }
   }
-  SPI_endWrite();
 
 
-  SPI_startWrite();
   // Ausgabe des Temperaturfeldes auf Display
   for (uint8_t xi = 0; xi < 16; ++xi)
   {
@@ -232,8 +215,7 @@ void OutTempField(void)
 
     for (uint8_t yi = 0; yi < 4; ++yi)
     {
-      hue = (MAXTEMP - temps[xi][yi]) / (float)(MAXTEMP - MINTEMP);
-      uint8_t h_i = ((uint16_t)(hue * 0x555)) >> 3;
+      uint8_t h_i = (((MAXTEMP - temps[xi][yi]) * 0x555) / (MAXTEMP - MINTEMP)) >> 3;
       uint16_t color = pgm_read_word(colormap + h_i);  //colormap[h_i];
 
       for (uint8_t yd = 0; yd < ZOOM; ++yd)
@@ -254,11 +236,8 @@ void OutTempField(void)
     //    Serial.println();
   }
   //    Serial.println("***");
-  SPI_endWrite();
 
 
-
-  SPI_startWrite();
   // Bilineare Interpolation mit Tabelle
   for (uint8_t xi = 0; xi < 16 - 1; ++xi)
   {
@@ -269,10 +248,9 @@ void OutTempField(void)
       {
         for (uint8_t xd = 0; xd < ZOOM; ++xd)
         {
-          interpoltemp = temps[xi][yi] * Weight[xd][yd] + temps[xi + 1][yi] * Weight[ZOOM - xd][yd] + temps[xi][yi + 1] * Weight[xd][ZOOM - yd] + temps[xi + 1][yi + 1] * Weight[ZOOM - xd][ZOOM - yd];
+          interpoltemp = ((int32_t) temps[xi][yi] * Weight[xd][yd] + (int32_t) temps[xi + 1][yi] * Weight[ZOOM - xd][yd] + (int32_t) temps[xi][yi + 1] * Weight[xd][ZOOM - yd] + (int32_t) temps[xi + 1][yi + 1] * Weight[ZOOM - xd][ZOOM - yd]) >> 7;
 
-          hue = (MAXTEMP - interpoltemp) / (float)(MAXTEMP - MINTEMP);
-          uint8_t h_i = ((uint16_t)(hue * 0x555)) >> 3;
+          uint8_t h_i = (((MAXTEMP - interpoltemp) * 0x555) / (MAXTEMP - MINTEMP)) >> 3;
           uint16_t color = pgm_read_word(colormap + h_i);  //colormap[h_i];
           uint8_t color_high = color >> 8, color_low = color;
 

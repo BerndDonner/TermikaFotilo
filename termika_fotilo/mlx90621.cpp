@@ -54,7 +54,7 @@ uint8_t MLX90621::init (void)
   uint8_t  alpha0scale = mem.eepromMLX[0xE2];                              // Scaling coefficient for common sensitivity
   uint8_t  deltaalphascale = mem.eepromMLX[0xE3];                          // Scaling coefficient for individual sensitivity
   float alphacp = (( mem.eepromMLX[0xD7] << 8 ) | mem.eepromMLX[0xD6]) / (float) (pow (2, alpha0scale) * pow (2, 3 - ( (configreg >> 4) & 0x03)));       // Sensitivity coefficient of the compensation pixel
-  epsilon = ( mem.eepromMLX[0xE5] << 8 ) | mem.eepromMLX[0xE4] ;       // Emissivity
+  epsilon = ( mem.eepromMLX[0xE5] >> 7 );       // Emissivity / 32768
   int16_t acommon = (int16_t)(( mem.eepromMLX[0xD1] << 8 ) | mem.eepromMLX[0xD0]);    // IR pixel common offset coefficient
   int16_t ksta = (int16_t)(( mem.eepromMLX[0xD7] << 8 ) | mem.eepromMLX[0xD6]);   // KsTa (fixed scale coefficient = 20)
   int8_t ks4ee = (int8_t)mem.eepromMLX[0xC4];
@@ -89,13 +89,13 @@ uint8_t MLX90621::init (void)
 
 /**
   @brief  Liest das IR-Feld einmal aus und berechnet die Temperaturen fuer jeden einzelnen IR-Sensor => temperatures[]
-  @param  none
+  @param  int16_t temperatures[16][4] temperature * 128 as integer.
   @return none
 */
-void MLX90621::read_all_irfield (float temperatures[16][4])
+void MLX90621::read_all_irfield (int16_t temperatures[16][4]) 
 {
   uint8_t x, y, i;
-  int16_t vir;
+  int16_t* vir;
   
   while (test_por ())
   {
@@ -109,18 +109,19 @@ void MLX90621::read_all_irfield (float temperatures[16][4])
     
   for (i = 0; i < 64; i++)
   {
-    vir = (int16_t)(mem.irpixels[i * 2 + 1] << 8 | mem.irpixels[i * 2]);      
+    vir = (int16_t *)(&mem.irpixels[i * 2]);      
 
     // Thermal Gradient Compensation (TGC)
-    float virtgccompensated = vir - viroffset[i];
+    float tmp = (*vir) - viroffset[i];
     
     // Emissivity compensation
-    float vircompensated = virtgccompensated / (epsilon / 32768); //Ganzzahldivision
+    float vircompensated = tmp / epsilon;
     
     float sx = ks4 * pow ( ( ( pow (alphacomp[i], 3) * vircompensated ) + ( pow  ( alphacomp[i], 4 ) * tak4 ) ), (1 / 4.0) );              // x. Wurzel aus y = y^(1/x)
     float to = pow ( (vircompensated / ( alphacomp[i] * (1 - ks4 * 273.15) + sx ) ) + tak4, (1 / 4.0) ) - 273.15;
 
-    temperatures[i%16][(uint8_t)i/16] = to;      // yeah, wir haben die reale Temperatur
+    // Reihe umkehren, da Sensor nach vorne und Display nach hinten => Temperatur-Feld so wie, auf Display zu zeigen
+    temperatures[15 - (i%16)][(uint8_t)i/16] = (int16_t) (to * 128);      // yeah, wir haben die reale Temperatur
   }
 }
 

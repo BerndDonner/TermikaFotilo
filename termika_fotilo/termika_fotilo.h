@@ -6,11 +6,11 @@ const PROGMEM uint8_t DC_  = 9;
 const PROGMEM uint8_t RST_ = 8;  
 
 // Farb-Spektrum
-const int8_t MINTEMP = -5;
-const uint8_t MAXTEMP = 30;
+const int16_t MINTEMP = -5 << 7;
+const uint16_t MAXTEMP = 30 << 7;
 
 const uint8_t ZOOM = 7;         // Vergroesserungfaktor
-float Weight[ZOOM+1][ZOOM+1];
+int8_t Weight[ZOOM+1][ZOOM+1];
 
 
 // Allgemein
