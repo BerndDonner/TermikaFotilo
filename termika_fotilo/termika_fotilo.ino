@@ -102,12 +102,12 @@ void StartScreen(void)
   DIS_ST7735_setCursor(0, 120);
   DIS_ST7735_drawString(F("Please wait"));
 
-  DIS_ST7735_fillRect(0, 27, 16 + 3, 4 + 3, 0x000c);
-  DIS_ST7735_drawRect(0, 27, 16 + 3, 4 + 3, 0x7bef);
-  DIS_ST7735_fillRect(0, 40, 16 * ZOOM + 3, 4 * ZOOM + 3, 0x000c);
-  DIS_ST7735_drawRect(0, 40, 16 * ZOOM + 3, 4 * ZOOM + 3, 0x7bef);
-  DIS_ST7735_fillRect(0, 75, 15 * ZOOM + 3, 3 * ZOOM + 3, 0x000c);
-  DIS_ST7735_drawRect(0, 75, 15 * ZOOM + 3, 3 * ZOOM + 3, 0x7bef);
+  DIS_ST7735_fillRect(0, 27, 16 + 2, 4 + 2, 0x000c);
+  DIS_ST7735_drawRect(0, 27, 16 + 2, 4 + 2, 0x7bef);
+  DIS_ST7735_fillRect(0, 40, 16 * ZOOM + 2, 4 * ZOOM + 2, 0x000c);
+  DIS_ST7735_drawRect(0, 40, 16 * ZOOM + 2, 4 * ZOOM + 2, 0x7bef);
+  DIS_ST7735_fillRect(0, 75, 15 * ZOOM + 2, 3 * ZOOM + 2, 0x000c);
+  DIS_ST7735_drawRect(0, 75, 15 * ZOOM + 2, 3 * ZOOM + 2, 0x7bef);
 
   SPI_startWrite();
   DIS_ST7735_setAddrWindow(150, 25, 10, 103);

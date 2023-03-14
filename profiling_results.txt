@@ -118,3 +118,13 @@ PROFILING --- Laufzeit der Hauptschleife: 385336
 PROFILING --- Laufzeit der Hauptschleife: 385344
 PROFILING --- Laufzeit der Hauptschleife: 384960
 PROFILING --- Laufzeit der Hauptschleife: 384960
+
+Interpolation ohne floating point Arithmetik
+
+PROFILING --- Laufzeit der Hauptschleife: 274808
+PROFILING --- Laufzeit der Hauptschleife: 274792
+PROFILING --- Laufzeit der Hauptschleife: 274868
+PROFILING --- Laufzeit der Hauptschleife: 274872
+PROFILING --- Laufzeit der Hauptschleife: 274876
+PROFILING --- Laufzeit der Hauptschleife: 274788
+
