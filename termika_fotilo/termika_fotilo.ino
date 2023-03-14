@@ -60,11 +60,11 @@ void loop()
 
 void initWeight()
 {
-  for (int i = 0; i <= ZOOM; ++i)
+  for (uint8_t i = 0; i <= ZOOM; ++i)
   {
-    for (int j = 0; j <= ZOOM; ++j)
+    for (uint8_t j = 0; j <= ZOOM; ++j)
     {
-      Weight[i][j] = (((ZOOM - i) * (ZOOM - j)) << 7) / (ZOOM * ZOOM);
+      Weight[i][j] = ( (uint16_t) ((ZOOM - i) * (ZOOM - j)) << 7) / (ZOOM * ZOOM);
     }
   }
 }

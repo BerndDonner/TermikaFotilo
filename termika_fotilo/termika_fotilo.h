@@ -9,8 +9,8 @@ const PROGMEM uint8_t RST_ = 8;
 const int16_t MINTEMP = -5 << 7;
 const uint16_t MAXTEMP = 30 << 7;
 
-const uint8_t ZOOM = 7;         // Vergroesserungfaktor
-int8_t Weight[ZOOM+1][ZOOM+1];
+const uint8_t ZOOM = 8;         // Vergroesserungfaktor
+uint8_t Weight[ZOOM+1][ZOOM+1];
 
 
 // Allgemein
